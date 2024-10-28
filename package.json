@@ -1,0 +1,23 @@
+
+{
+  "name": "web3-learn-to-fly",
+  "version": "1.0.0",
+  "description": "Web3 version of the classic game Learn to Fly",
+  "main": "game.js",
+  "dependencies": {
+    "phaser": "^3.55.2",
+    "web3": "^1.5.2"
+  },
+  "devDependencies": {
+    "solc": "^0.8.0"
+  },
+  "scripts": {
+    "start": "node game.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/username/web3-learn-to-fly.git"
+  },
+  "author": "Your Name",
+  "license": "MIT"
+}
