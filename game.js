@@ -1,4 +1,3 @@
-
 const config = {
     type: Phaser.AUTO,
     width: 800,
@@ -19,29 +18,41 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
+let spacebar;
 
 function preload() {
-    this.load.image('penguin', 'assets/penguin.png'); // placeholder image
-    this.load.image('ground', 'assets/ground.png');
+    this.load.image('tire', 'assets/tire.png');  // Load tire image
+    this.load.image('ground', 'assets/ground.png');  // Load ground image
 }
 
 function create() {
     this.add.text(20, 20, 'Learn to Fly Web3 Clone', { fontSize: '32px', fill: '#FFF' });
 
-    // Penguin setup
-    this.penguin = this.physics.add.sprite(100, 450, 'penguin');
-    this.penguin.setBounce(0.2);
-    this.penguin.setCollideWorldBounds(true);
+    // Tire setup
+    this.tire = this.physics.add.sprite(100, 450, 'tire');
+    this.tire.setBounce(0.2);
+    this.tire.setCollideWorldBounds(true);
 
     // Ground setup
     const ground = this.physics.add.staticGroup();
     ground.create(400, 568, 'ground').setScale(2).refreshBody();
-    this.physics.add.collider(this.penguin, ground);
+    this.physics.add.collider(this.tire, ground);
+
+    // Define the spacebar key
+    spacebar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+    // AudioContext handling
+    this.input.once('pointerdown', () => {
+        if (this.sound.context.state === 'suspended') {
+            this.sound.context.resume();
+        }
+    });
 }
 
 function update() {
-    if (this.input.keyboard.checkDown(spacebar, 1000)) {
-        const totalBoost = inventory.boosters.boostEffect + inventory.launchers.boostEffect + inventory.gliders.boostEffect;
-        this.penguin.setVelocityX(200 * totalBoost); // Base speed scaled by total boosts
+    if (Phaser.Input.Keyboard.JustDown(spacebar)) {
+        // Simulate a launch with tire speed boost
+        const totalBoost = 1.5;  // Placeholder for any additional upgrades or boosts
+        this.tire.setVelocityX(200 * totalBoost); // Adjust speed based on total boosts
     }
 }
