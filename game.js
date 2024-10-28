@@ -18,12 +18,13 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
-let spacebar, tire, ground, ramp, isLaunched = false, distance = 0;
+let spacebar, tire, ground, ramp, hill, isLaunched = false, distance = 0;
 
 function preload() {
     this.load.image('tire', 'assets/tire.png');  // Tire image
     this.load.image('ground', 'assets/ground.png');  // Ground image
-    this.load.image('ramp', 'assets/ramp.png');  // Ramp image (you'll need a placeholder)
+    this.load.image('ramp', 'assets/ramp.png');  // Ramp image
+    this.load.image('hill', 'assets/hill.png');  // Hill image
 }
 
 function create() {
@@ -34,10 +35,9 @@ function create() {
     ground = this.physics.add.staticGroup();
     ground.create(400, 568, 'ground').setScale(2).refreshBody();
     
-    // Starting area setup
-    const startPlatform = this.add.rectangle(100, 500, 200, 20, 0x8B4513);
-    this.physics.add.existing(startPlatform, true);
-
+    // Hill setup
+    hill = this.physics.add.staticSprite(150, 500, 'hill');
+    
     // Ramp setup
     ramp = this.add.sprite(400, 540, 'ramp');
     this.physics.add.existing(ramp, true); // Static ramp
@@ -47,7 +47,7 @@ function create() {
     tire.setBounce(0.2);
     tire.setCollideWorldBounds(true);
     this.physics.add.collider(tire, ground);
-    this.physics.add.collider(tire, startPlatform);
+    this.physics.add.collider(tire, hill);
     this.physics.add.collider(tire, ramp);
 
     // Define the spacebar key
@@ -66,22 +66,21 @@ function create() {
 
 function update() {
     if (Phaser.Input.Keyboard.JustDown(spacebar) && !isLaunched) {
-        // Launch the tire with an initial velocity
-        tire.setVelocity(300, -200); // Adjust angle and speed as needed
+        // Launch the tire with an initial velocity after rolling down the hill
+        tire.setVelocityX(200);  // Start rolling down the hill at a lower speed
         isLaunched = true;
     }
 
-    // If the tire is moving, track distance
+    // Increase distance while tire is moving
     if (isLaunched && tire.body.velocity.x > 0) {
-        distance += tire.body.velocity.x * 0.016; // Approximate frame time
+        distance += tire.body.velocity.x * 0.016;  // Frame-based approximation
         this.distanceText.setText('Distance: ' + Math.floor(distance));
     }
 
-    // Check if tire has stopped moving
+    // Check if tire stops moving
     if (isLaunched && tire.body.velocity.x === 0) {
         isLaunched = false;
-        // Display final distance or reset
         this.distanceText.setText('Final Distance: ' + Math.floor(distance) + ' Press Space to Restart');
-        distance = 0;  // Reset distance for next run
+        distance = 0;  // Reset for the next round
     }
 }
