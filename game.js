@@ -1,8 +1,9 @@
 const config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    width: 1200,  // Increased width
+    height: 800,  // Increased height
     backgroundColor: '#87CEEB',
+    parent: 'game-container',  // Attach canvas to #game-container
     physics: {
         default: 'arcade',
         arcade: {
@@ -32,13 +33,13 @@ function create() {
 
     // Ground setup
     ground = this.physics.add.staticGroup();
-    ground.create(400, 568, 'ground').setScale(2).refreshBody();
+    ground.create(600, 780, 'ground').setScale(2).refreshBody();  // Adjust position for new size
     
-    // Hill/Ramp setup
-    hillRamp = this.physics.add.staticSprite(400, 500, 'hill_ramp');  // Position based on asset size
+    // Hill/Ramp setup - Centered with the increased canvas size
+    hillRamp = this.physics.add.staticSprite(600, 650, 'hill_ramp');  // Positioned based on canvas center
     
-    // Tire setup - start at the top left of the hill
-    tire = this.physics.add.sprite(100, 400, 'tire');
+    // Tire setup - Start at the top of the hill, adjusted to the hill's height
+    tire = this.physics.add.sprite(500, 570, 'tire');  // Position near the top left of hill image
     tire.setBounce(0.2);
     tire.setCollideWorldBounds(true);
     this.physics.add.collider(tire, ground);

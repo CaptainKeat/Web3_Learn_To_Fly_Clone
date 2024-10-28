@@ -1,15 +1,36 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Learn to Fly 2 Web3 Clone</title>
+  <title>Learn to Fly Web3 Clone</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    /* Center the game container */
+    body, html {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      margin: 0;
+      background-color: #87CEEB; /* Sky blue background */
+    }
+    #game-container {
+      width: 100vw;
+      max-width: 1200px;
+      height: 100vh;
+      max-height: 800px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js"></script>
 </head>
-<body class="bg-blue-500">
-  <div id="game-container" class="w-full h-screen"></div>
+<body>
+  <div id="game-container">
+    <!-- The Phaser game canvas will be placed here -->
+  </div>
   <script src="game.js"></script>
 </body>
 </html>
