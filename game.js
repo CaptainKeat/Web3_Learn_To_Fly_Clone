@@ -10,8 +10,8 @@ let slingshotHeight = 100;
 let bounceBoost = 5;
 let bounceBoostCount = 0;
 let bounceBoostUsed = 0;
-let maxPullBackDistance = 100; // Initial pull-back distance, will increase with upgrades
-let pullBackLevel = 0; // Tracks number of pull-back distance upgrades
+let maxPullBackDistance = 100;
+let pullBackLevel = 0;
 let isDragging = false;
 let startX, startY, releaseVelocityX, releaseVelocityY;
 let cameraX = 0;
@@ -34,24 +34,28 @@ const tire = {
     released: false,
 };
 
-// Draw function with consistent ground and dynamic background
+// Draw function with consistent ground and repeating background sections
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     cameraX = Math.max(0, tire.x - slingshotOffsetX);
 
-    // Draw Sky Background (Static)
+    // Draw Sky Background
     ctx.fillStyle = "#87CEEB";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Transition Background based on distance
-    if (distanceTraveled < 500) {
-        drawHills(-cameraX * 0.3); // Hills in the background for the first 500 meters
-    } else if (distanceTraveled < 1000) {
-        drawForest(-cameraX * 0.3); // Forest after 500 meters
-    } else if (distanceTraveled < 1500) {
-        drawDesert(-cameraX * 0.3); // Desert after 1000 meters
+    // Calculate current background section
+    const backgroundCycle = Math.floor(distanceTraveled / 2000) % 4;
+    const offsetX = -cameraX * 0.3;
+
+    // Draw background based on section
+    if (backgroundCycle === 0) {
+        drawHills(offsetX);
+    } else if (backgroundCycle === 1) {
+        drawForest(offsetX);
+    } else if (backgroundCycle === 2) {
+        drawDesert(offsetX);
     } else {
-        drawPlains(-cameraX * 0.3); // Open plains after 1500 meters
+        drawPlains(offsetX);
     }
 
     drawTrees(-cameraX * 0.6);
@@ -191,6 +195,10 @@ function update() {
     draw();
     requestAnimationFrame(update);
 }
+
+// Dragging, release, and upgrade functions remain the same as previous
+// (For brevity, only the update draw and background functions were changed as per your request)
+
 
 // Restrict dragging to max pull-back distance and limit forward movement
 function startDrag(event) {
