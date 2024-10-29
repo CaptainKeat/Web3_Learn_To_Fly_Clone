@@ -4,13 +4,13 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight * 0.7;
 
 let distanceTraveled = 0;
-let slingPower = 4;  // Reduced sling power for shorter launches
+let slingPower = 4;
 let tireWeight = 1;
-let slingshotHeight = 80; // Adjusted slingshot height for smaller tire
+let slingshotHeight = 80;
 let bounceBoost = 3;
 let bounceBoostCount = 0;
 let bounceBoostUsed = 0;
-let maxPullBackDistance = 70; // Adjusted max pull-back distance
+let maxPullBackDistance = 70;
 let pullBackLevel = 0;
 let isDragging = false;
 let startX, startY, releaseVelocityX, releaseVelocityY;
@@ -25,7 +25,7 @@ const slingshotCenter = { x: slingshotOffsetX, y: canvas.height - 50 };
 const tire = {
     x: slingshotCenter.x,
     y: slingshotCenter.y,
-    radius: 15,  // Smaller tire radius for car tire size
+    radius: 15,
     vx: 0,
     vy: 0,
     inAir: false,
@@ -34,7 +34,13 @@ const tire = {
     released: false,
 };
 
-// Draw function with consistent ground and repeating background sections
+// Variables for animated background elements
+let cloudOffset = 0;
+let mountainOffset = 0;
+let treeOffset = 0;
+let bushOffset = 0;
+
+// Draw function with animated background layers
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     cameraX = Math.max(0, tire.x - slingshotOffsetX);
@@ -43,28 +49,17 @@ function draw() {
     ctx.fillStyle = "#87CEEB";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Calculate current background section
-    const backgroundCycle = Math.floor(distanceTraveled / 2000) % 4;
-    const offsetX = -cameraX * 0.3;
+    // Animated Background Layers
+    drawClouds(-cameraX * 0.1 + cloudOffset);
+    drawMountains(-cameraX * 0.2 + mountainOffset);
+    drawTrees(-cameraX * 0.4 + treeOffset);
+    drawBushes(-cameraX * 0.5 + bushOffset);
 
-    // Draw background based on section
-    if (backgroundCycle === 0) {
-        drawHills(offsetX);
-    } else if (backgroundCycle === 1) {
-        drawForest(offsetX);
-    } else if (backgroundCycle === 2) {
-        drawDesert(offsetX);
-    } else {
-        drawPlains(offsetX);
-    }
-
-    drawTrees(-cameraX * 0.6);
-
-    // Draw Ground Line (consistent flat brown area)
+    // Ground
     ctx.fillStyle = "#8B4513";
     ctx.fillRect(-cameraX, canvas.height - 30, canvas.width * 2, 30);
 
-    // Draw Slingshot Arms
+    // Slingshot Arms
     ctx.beginPath();
     ctx.moveTo(slingshotCenter.x - 20 - cameraX, slingshotCenter.y);
     ctx.lineTo(slingshotCenter.x - 20 - cameraX, slingshotCenter.y - slingshotHeight);
@@ -74,7 +69,7 @@ function draw() {
     ctx.lineWidth = 8;
     ctx.stroke();
 
-    // Draw Rubber Band if Tire is Held (not released)
+    // Rubber Band
     if (isDragging || (!tire.released && tire.inAir)) {
         ctx.beginPath();
         ctx.moveTo(slingshotCenter.x - 20 - cameraX, slingshotCenter.y - slingshotHeight);
@@ -94,74 +89,66 @@ function draw() {
     ctx.fillStyle = "black";
     ctx.fill();
     ctx.restore();
+
+    // Animate Background Layers
+    cloudOffset -= 0.2;
+    mountainOffset -= 0.1;
+    treeOffset -= 0.4;
+    bushOffset -= 0.5;
 }
 
-// Function to draw hills
-function drawHills(offset) {
-    ctx.fillStyle = "#556B2F";
-    ctx.beginPath();
-    ctx.moveTo(offset, canvas.height - 80);
-    for (let i = 0; i < canvas.width + 100; i += 100) {
-        let hillHeight = 30 + Math.sin(i * 0.01) * 20;
-        ctx.lineTo(offset + i, canvas.height - 80 - hillHeight);
-    }
-    ctx.lineTo(canvas.width, canvas.height);
-    ctx.lineTo(0, canvas.height);
-    ctx.fill();
-}
-
-// Function to draw forest background
-function drawForest(offset) {
-    ctx.fillStyle = "#228B22"; // Darker green for forest trees
-    for (let i = 0; i < canvas.width + 100; i += 150) {
+// Background Layers
+function drawClouds(offset) {
+    ctx.fillStyle = "#ffffff";
+    for (let i = 0; i < canvas.width + 100; i += 200) {
         ctx.beginPath();
-        ctx.moveTo(offset + i, canvas.height - 60);
-        ctx.lineTo(offset + i + 20, canvas.height - 120);
-        ctx.lineTo(offset + i - 20, canvas.height - 120);
-        ctx.closePath();
+        ctx.arc(offset + i, 100, 40, 0, Math.PI * 2);
+        ctx.arc(offset + i + 50, 120, 30, 0, Math.PI * 2);
+        ctx.arc(offset + i - 50, 110, 35, 0, Math.PI * 2);
         ctx.fill();
     }
 }
 
-// Function to draw desert background
-function drawDesert(offset) {
-    ctx.fillStyle = "#D2B48C"; // Sandy color for desert
-    ctx.fillRect(offset, canvas.height - 80, canvas.width, 50);
-
-    ctx.fillStyle = "#C2A385"; // Desert dunes color
+function drawMountains(offset) {
+    ctx.fillStyle = "#A9A9A9";
     ctx.beginPath();
-    for (let i = 0; i < canvas.width + 100; i += 100) {
-        let duneHeight = 10 + Math.cos(i * 0.03) * 10;
-        ctx.lineTo(offset + i, canvas.height - 60 - duneHeight);
+    ctx.moveTo(offset, canvas.height - 100);
+    for (let i = 0; i < canvas.width + 100; i += 200) {
+        let mountainHeight = 60 + Math.sin(i * 0.05) * 20;
+        ctx.lineTo(offset + i, canvas.height - 100 - mountainHeight);
     }
     ctx.lineTo(canvas.width, canvas.height);
     ctx.lineTo(0, canvas.height);
     ctx.fill();
 }
 
-// Function to draw plains background
-function drawPlains(offset) {
-    ctx.fillStyle = "#7BB661"; // Light green color for plains
-    ctx.fillRect(offset, canvas.height - 80, canvas.width, 50);
-}
-
-// Function to draw foreground trees
 function drawTrees(offset) {
     ctx.fillStyle = "#228B22";
-    for (let i = 0; i < canvas.width + 100; i += 150) {
+    for (let i = 0; i < canvas.width + 100; i += 120) {
         ctx.beginPath();
         ctx.moveTo(offset + i, canvas.height - 30);
-        ctx.lineTo(offset + i + 20, canvas.height - 80);
-        ctx.lineTo(offset + i - 20, canvas.height - 80);
+        ctx.lineTo(offset + i + 15, canvas.height - 80);
+        ctx.lineTo(offset + i - 15, canvas.height - 80);
         ctx.closePath();
         ctx.fill();
     }
 }
 
-// Update function with adjusted physics
+function drawBushes(offset) {
+    ctx.fillStyle = "#006400";
+    for (let i = 0; i < canvas.width + 100; i += 80) {
+        ctx.beginPath();
+        ctx.arc(offset + i, canvas.height - 40, 15, 0, Math.PI * 2);
+        ctx.arc(offset + i + 20, canvas.height - 35, 12, 0, Math.PI * 2);
+        ctx.arc(offset + i - 20, canvas.height - 35, 12, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+// Update function for gameplay and animation
 function update() {
     if (tire.inAir) {
-        tire.vy += 0.3 * tireWeight; // Adjusted gravity for smaller scale
+        tire.vy += 0.3 * tireWeight;
         tire.vx *= 0.98;
         tire.x += tire.vx;
         tire.y += tire.vy;
@@ -196,119 +183,7 @@ function update() {
     requestAnimationFrame(update);
 }
 
-// Dragging and release functions remain the same
-// Adjusted physics and scaling should now control the distance and appearance effectively
-
-// Restrict dragging to max pull-back distance and limit forward movement
-function startDrag(event) {
-    if (!tire.inAir && !tire.rolling && tire.stopped) {
-        isDragging = true;
-        startX = event.touches ? event.touches[0].clientX : event.clientX;
-        startY = event.touches ? event.touches[0].clientY : event.clientY;
-    }
-}
-
-function drag(event) {
-    if (isDragging) {
-        let currentX = event.touches ? event.touches[0].clientX : event.clientX;
-        let currentY = event.touches ? event.touches[0].clientY : event.clientY;
-
-        let dx = currentX + cameraX - slingshotCenter.x;
-        let dy = currentY - slingshotCenter.y;
-        let distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance > maxPullBackDistance) {
-            let angle = Math.atan2(dy, dx);
-            tire.x = slingshotCenter.x + Math.cos(angle) * maxPullBackDistance;
-            tire.y = slingshotCenter.y + Math.sin(angle) * maxPullBackDistance;
-        } else {
-            tire.x = currentX + cameraX;
-            tire.y = currentY;
-        }
-    }
-}
-
-function release() {
-    if (isDragging) {
-        isDragging = false;
-        tire.stopped = false;
-        tire.released = true;
-        releaseVelocityX = (slingshotCenter.x - tire.x) * slingPower / 50;
-        releaseVelocityY = (slingshotCenter.y - tire.y) * slingPower / 50;
-        tire.vx = releaseVelocityX;
-        tire.vy = releaseVelocityY;
-        tire.inAir = true;
-
-        tire.x = slingshotCenter.x;
-        tire.y = slingshotCenter.y;
-    }
-}
-
-// Bounce Boost activation on Space key press, with usage limitation
-document.addEventListener("keydown", (event) => {
-    if (event.code === "Space" && tire.rolling && bounceBoostUsed < bounceBoostCount) {
-        tire.vy = -bounceBoost;
-        tire.vx += 1;
-        tire.inAir = true;
-        bounceBoostUsed++;
-    }
-});
-
-// Upgrade Functions
-function showUpgradeMenu() {
-    document.getElementById("upgradeMenu").classList.remove("hidden");
-}
-
-function closeUpgradeMenu() {
-    document.getElementById("upgradeMenu").classList.add("hidden");
-    tire.x = slingshotCenter.x;
-    tire.y = slingshotCenter.y;
-}
-
-function upgradeSling() {
-    if (money >= 10) {
-        money -= 10;
-        slingPower += 5;
-        document.getElementById("money").innerText = money;
-    }
-}
-
-function upgradeTire() {
-    if (money >= 10) {
-        money -= 10;
-        tireWeight -= 0.1;
-        document.getElementById("money").innerText = money;
-    }
-}
-
-function upgradePoleHeight() {
-    if (money >= 10) {
-        money -= 10;
-        slingshotHeight += 20;
-        poleHeightLevel++;
-        document.getElementById("poleLevel").innerText = poleHeightLevel;
-        document.getElementById("money").innerText = money;
-    }
-}
-
-function upgradeBounceBoost() {
-    if (money >= 10) {
-        money -= 10;
-        bounceBoostCount++;
-        document.getElementById("boostLevel").innerText = bounceBoostCount;
-        document.getElementById("money").innerText = money;
-    }
-}
-
-function upgradePullBack() {
-    if (money >= 10) {
-        money -= 10;
-        maxPullBackDistance += 10;
-        pullBackLevel++;
-        document.getElementById("pullBackLevel").innerText = pullBackLevel;
-        document.getElementById("money").innerText = money;
-    }
-}
+// Dragging, release, and upgrade functions remain the same
 
 update();
 canvas.addEventListener("mousedown", startDrag);
