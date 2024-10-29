@@ -13,7 +13,11 @@ let backgroundOffset = 0;
 let tireAngle = 0;
 let money = 0;
 
-// Adjusted slingshot position further to the right for more pull-back space
+// Set pull-back limit and bounce properties
+const maxPullBackDistance = 100; // Limit pull-back distance
+const bounceFactor = 0.6; // Energy lost on each bounce
+
+// Adjust slingshot position to the right for better gameplay flow
 const slingshotOffsetX = canvas.width * 0.6;
 const slingshotCenter = { x: slingshotOffsetX, y: canvas.height - 50 };
 const tire = {
@@ -25,10 +29,10 @@ const tire = {
     inAir: false,
     rolling: false,
     stopped: true,
-    released: false, // Track if the tire is released to manage rope behavior
+    released: false,
 };
 
-// Draw Function with Parallax Background and Extended Ground Line
+// Draw function with parallax background, extended ground line, and slingshot visuals
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -38,6 +42,12 @@ function draw() {
     // Draw Sky Background (Static)
     ctx.fillStyle = "#87CEEB"; // Sky color
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw Hills for Background Parallax (Distant Layer)
+    drawHills(-cameraX * 0.3);
+
+    // Draw Trees for Foreground Parallax (Closer Layer)
+    drawTrees(-cameraX * 0.6);
 
     // Draw Ground Line
     ctx.fillStyle = "#8B4513"; // Ground color
@@ -75,25 +85,53 @@ function draw() {
     ctx.restore();
 }
 
-// Update Function with Natural Arc Physics
+// Function to draw distant hills
+function drawHills(offset) {
+    ctx.fillStyle = "#556B2F"; // Dark green color for distant hills
+    ctx.beginPath();
+    ctx.moveTo(offset, canvas.height - 80);
+    for (let i = 0; i < canvas.width + 100; i += 100) {
+        let hillHeight = 30 + Math.sin(i * 0.01) * 20; // Variation in height
+        ctx.lineTo(offset + i, canvas.height - 80 - hillHeight);
+    }
+    ctx.lineTo(canvas.width, canvas.height);
+    ctx.lineTo(0, canvas.height);
+    ctx.fill();
+}
+
+// Function to draw foreground trees
+function drawTrees(offset) {
+    ctx.fillStyle = "#228B22"; // Green color for trees
+    for (let i = 0; i < canvas.width + 100; i += 150) {
+        ctx.beginPath();
+        ctx.moveTo(offset + i, canvas.height - 30);
+        ctx.lineTo(offset + i + 20, canvas.height - 80);
+        ctx.lineTo(offset + i - 20, canvas.height - 80);
+        ctx.closePath();
+        ctx.fill();
+    }
+}
+
+// Update function with bounce physics and ground friction
 function update() {
     if (tire.inAir) {
         tire.vy += 0.5 * tireWeight; // Gravity effect
         tire.vx *= 0.99; // Air friction
         tire.x += tire.vx;
         tire.y += tire.vy;
-        tireAngle += tire.vx / tire.radius; // Rolling effect in air
+        tireAngle += tire.vx / tire.radius;
 
-        // Check if tire lands on ground
+        // Check for ground collision and apply bounce
         if (tire.y >= canvas.height - 50) {
-            tire.inAir = false;
-            tire.rolling = true;
+            tire.inAir = tire.vy > 2; // Keep in air if bounce velocity is significant
+            tire.rolling = !tire.inAir; // Transition to rolling if bounce is minimal
+            tire.vy = -tire.vy * bounceFactor; // Bounce with reduced speed
             tire.y = canvas.height - 50;
         }
     } else if (tire.rolling) {
         tire.vx *= 0.98; // Ground friction
         tire.x += tire.vx;
-        tireAngle += tire.vx / tire.radius; // Rolling effect on ground
+        tireAngle += tire.vx / tire.radius;
 
         if (Math.abs(tire.vx) < 0.1) { // Stop rolling
             tire.rolling = false;
@@ -113,7 +151,7 @@ function update() {
     requestAnimationFrame(update);
 }
 
-// Allow dragging to the left but restrict forward movement beyond slingshot center
+// Restrict dragging to max pull-back distance and limit forward movement
 function startDrag(event) {
     if (!tire.inAir && !tire.rolling && tire.stopped) {
         isDragging = true;
@@ -126,8 +164,21 @@ function drag(event) {
     if (isDragging) {
         let currentX = event.touches ? event.touches[0].clientX : event.clientX;
         let currentY = event.touches ? event.touches[0].clientY : event.clientY;
-        tire.x = Math.min(currentX + cameraX, slingshotCenter.x); // Restrict forward movement
-        tire.y = currentY;
+
+        // Calculate the distance from the slingshot center to the current drag position
+        let dx = currentX + cameraX - slingshotCenter.x;
+        let dy = currentY - slingshotCenter.y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Restrict the pull-back distance to maxPullBackDistance
+        if (distance > maxPullBackDistance) {
+            let angle = Math.atan2(dy, dx);
+            tire.x = slingshotCenter.x + Math.cos(angle) * maxPullBackDistance;
+            tire.y = slingshotCenter.y + Math.sin(angle) * maxPullBackDistance;
+        } else {
+            tire.x = currentX + cameraX;
+            tire.y = currentY;
+        }
     }
 }
 
@@ -135,7 +186,7 @@ function release() {
     if (isDragging) {
         isDragging = false;
         tire.stopped = false;
-        tire.released = true; // Mark tire as released to detach ropes
+        tire.released = true;
         releaseVelocityX = (slingshotCenter.x - tire.x) * slingPower / 50;
         releaseVelocityY = (slingshotCenter.y - tire.y) * slingPower / 50;
         tire.vx = releaseVelocityX;
@@ -169,7 +220,7 @@ function upgradeSling() {
 function upgradeTire() {
     if (money >= 10) {
         money -= 10;
-        tireWeight -= 0.1; // Lighten the tire for more distance
+        tireWeight -= 0.1;
         document.getElementById("money").innerText = money;
     }
 }
