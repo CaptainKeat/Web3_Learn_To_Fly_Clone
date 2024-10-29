@@ -3,15 +3,14 @@ const ctx = canvas.getContext("2d");
 
 // Load assets
 const penguinImg = new Image();
-penguinImg.src = 'assets/penguin.png';
+penguinImg.src = 'assets/tire.png';
 
 const hillImg = new Image();
-hillImg.src = 'assets/hill.png';
+hillImg.src = 'assets/hill_ramp.png';
 
 const backgrounds = [
     'assets/background1.png',
     'assets/background2.png',
-    'assets/background3.png'
 ].map(src => {
     const img = new Image();
     img.src = src;
