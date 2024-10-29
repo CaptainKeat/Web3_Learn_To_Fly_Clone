@@ -1,7 +1,7 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight * 0.7;
+canvas.width = 800; // Fixed width for the game area
+canvas.height = 500; // Fixed height for the game area
 
 let distanceTraveled = 0;
 let slingPower = 4;
@@ -14,7 +14,6 @@ let maxPullBackDistance = 70;
 let pullBackLevel = 0;
 let isDragging = false;
 let startX, startY, releaseVelocityX, releaseVelocityY;
-let cameraX = 0;
 let tireAngle = 0;
 let money = 0;
 const bounceFactor = 0.5;
@@ -27,8 +26,7 @@ let zoomSpeed = 0.005;
 const minZoom = 1;
 const maxZoom = 1.5;
 
-const slingshotOffsetX = canvas.width * 0.6;
-const slingshotCenter = { x: slingshotOffsetX, y: canvas.height - 50 };
+const slingshotCenter = { x: canvas.width * 0.6, y: canvas.height - 50 };
 const tire = {
     x: slingshotCenter.x,
     y: slingshotCenter.y,
@@ -51,7 +49,7 @@ const backgroundImages = [
 
 // Load each image and verify loading
 let imagesLoaded = 0;
-backgroundImages.forEach((bg, index) => {
+backgroundImages.forEach((bg) => {
     bg.image.src = bg.src;
     bg.image.onload = () => {
         imagesLoaded++;
@@ -73,18 +71,18 @@ function draw() {
         if (zoomLevel > targetZoom) zoomLevel = targetZoom;
     }
 
-    // Translate and scale canvas for zoom effect centered on the tire
+    // Apply zoom centered on the tire
     ctx.save();
     ctx.translate(canvas.width / 2, canvas.height / 2);
     ctx.scale(zoomLevel, zoomLevel);
     ctx.translate(-tire.x, -tire.y);
 
-    // Fixed Background Image (stays at (0,0) regardless of the tire's position)
+    // Persistent Background Image (fixed at 0,0)
     const sectionIndex = Math.floor((distanceTraveled / 2000) % backgroundImages.length);
     const currentBackground = backgroundImages[sectionIndex]?.image;
 
     if (currentBackground && currentBackground.complete) {
-        ctx.drawImage(currentBackground, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(currentBackground, -canvas.width, 0, canvas.width * 3, canvas.height);
     } else {
         console.warn("Background image is undefined or not fully loaded.");
     }
@@ -187,7 +185,6 @@ function release() {
     }
 }
 
-// Dragging and release functions remain the same
 function startDrag(event) {
     if (!tire.inAir && !tire.rolling && tire.stopped) {
         isDragging = true;
@@ -226,7 +223,6 @@ document.addEventListener("keydown", (event) => {
     }
 });
 
-// Upgrade Functions
 function showUpgradeMenu() {
     document.getElementById("upgradeMenu").classList.remove("hidden");
 }
@@ -236,52 +232,6 @@ function closeUpgradeMenu() {
     tire.x = slingshotCenter.x;
     tire.y = slingshotCenter.y;
 }
-
-function upgradeSling() {
-    if (money >= 10) {
-        money -= 10;
-        slingPower += 5;
-        document.getElementById("money").innerText = money;
-    }
-}
-
-function upgradeTire() {
-    if (money >= 10) {
-        money -= 10;
-        tireWeight -= 0.1;
-        document.getElementById("money").innerText = money;
-    }
-}
-
-function upgradePoleHeight() {
-    if (money >= 10) {
-        money -= 10;
-        slingshotHeight += 20;
-        poleHeightLevel++;
-        document.getElementById("poleLevel").innerText = poleHeightLevel;
-        document.getElementById("money").innerText = money;
-    }
-}
-
-function upgradeBounceBoost() {
-    if (money >= 10) {
-        money -= 10;
-        bounceBoostCount++;
-        document.getElementById("boostLevel").innerText = bounceBoostCount;
-        document.getElementById("money").innerText = money;
-    }
-}
-
-function upgradePullBack() {
-    if (money >= 10) {
-        money -= 10;
-        maxPullBackDistance += 10;
-        pullBackLevel++;
-        document.getElementById("pullBackLevel").innerText = pullBackLevel;
-        document.getElementById("money").innerText = money;
-    }
-}
-
 canvas.addEventListener("mousedown", startDrag);
 canvas.addEventListener("mousemove", drag);
 canvas.addEventListener("mouseup", release);
