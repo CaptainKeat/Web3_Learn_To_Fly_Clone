@@ -8,10 +8,11 @@ let slingPower = 10;
 let tireWeight = 1;
 let isDragging = false;
 let startX, startY, releaseVelocityX, releaseVelocityY;
-let backgroundX = 0;
+let cameraX = 0; // New camera offset variable
 
-// Adjusted slingshot position to center horizontally
-const slingshotCenter = { x: canvas.width / 3, y: canvas.height - 50 };
+// Slingshot Position, adjusted to be relative to camera
+const slingshotOffsetX = 150; // Distance from left side of screen
+const slingshotCenter = { x: slingshotOffsetX, y: canvas.height - 50 };
 const tire = {
     x: slingshotCenter.x,
     y: slingshotCenter.y,
@@ -26,16 +27,19 @@ const tire = {
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw Background
-    ctx.fillStyle = "#8B4513"; // Ground color
-    ctx.fillRect(0, canvas.height - 30, canvas.width, 30);
+    // Calculate camera offset
+    cameraX = Math.max(0, tire.x - slingshotOffsetX);
 
-    // Draw Slingshot Arms
+    // Draw Ground
+    ctx.fillStyle = "#8B4513"; // Ground color
+    ctx.fillRect(-cameraX, canvas.height - 30, canvas.width * 2, 30);
+
+    // Draw Slingshot Arms relative to camera
     ctx.beginPath();
-    ctx.moveTo(slingshotCenter.x - 20, slingshotCenter.y);
-    ctx.lineTo(slingshotCenter.x - 20, slingshotCenter.y - 100);
-    ctx.moveTo(slingshotCenter.x + 20, slingshotCenter.y);
-    ctx.lineTo(slingshotCenter.x + 20, slingshotCenter.y - 100);
+    ctx.moveTo(slingshotCenter.x - 20 - cameraX, slingshotCenter.y);
+    ctx.lineTo(slingshotCenter.x - 20 - cameraX, slingshotCenter.y - 100);
+    ctx.moveTo(slingshotCenter.x + 20 - cameraX, slingshotCenter.y);
+    ctx.lineTo(slingshotCenter.x + 20 - cameraX, slingshotCenter.y - 100);
     ctx.strokeStyle = "brown";
     ctx.lineWidth = 8;
     ctx.stroke();
@@ -43,17 +47,17 @@ function draw() {
     // Draw Rubber Band
     if (isDragging || tire.inAir) {
         ctx.beginPath();
-        ctx.moveTo(slingshotCenter.x - 20, slingshotCenter.y - 100);
-        ctx.lineTo(tire.x, tire.y);
-        ctx.lineTo(slingshotCenter.x + 20, slingshotCenter.y - 100);
+        ctx.moveTo(slingshotCenter.x - 20 - cameraX, slingshotCenter.y - 100);
+        ctx.lineTo(tire.x - cameraX, tire.y);
+        ctx.lineTo(slingshotCenter.x + 20 - cameraX, slingshotCenter.y - 100);
         ctx.strokeStyle = "black";
         ctx.lineWidth = 2;
         ctx.stroke();
     }
 
-    // Draw Tire
+    // Draw Tire relative to camera
     ctx.beginPath();
-    ctx.arc(tire.x, tire.y, tire.radius, 0, Math.PI * 2);
+    ctx.arc(tire.x - cameraX, tire.y, tire.radius, 0, Math.PI * 2);
     ctx.fillStyle = "black";
     ctx.fill();
 }
@@ -81,12 +85,9 @@ function update() {
         }
     }
 
-    // Scroll background and update distance counter
-    if (tire.x > canvas.width / 2) {
-        backgroundX -= tire.vx;
-        distanceTraveled += Math.abs(tire.vx);
-        document.getElementById("distance").innerText = Math.round(distanceTraveled) + " meters";
-    }
+    // Update distance counter
+    distanceTraveled = Math.round(tire.x - slingshotCenter.x);
+    document.getElementById("distance").innerText = distanceTraveled + " meters";
 
     draw();
     requestAnimationFrame(update);
@@ -112,7 +113,7 @@ function drag(event) {
     if (isDragging) {
         let currentX = event.touches ? event.touches[0].clientX : event.clientX;
         let currentY = event.touches ? event.touches[0].clientY : event.clientY;
-        tire.x = currentX;
+        tire.x = currentX + cameraX; // Adjust drag position by camera offset
         tire.y = currentY;
     }
 }
