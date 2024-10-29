@@ -21,11 +21,11 @@ const bounceFactor = 0.5;
 let poleHeightLevel = 0;
 
 // Variables for zoom and background persistence
-let zoomLevel = 1; // Start zoom level
-let targetZoom = 1; // Target zoom level after release
-let zoomSpeed = 0.005; // Smooth zoom speed
-const minZoom = 1; // Minimum zoom level at launch
-const maxZoom = 1.5; // Maximum zoom level after launch
+let zoomLevel = 1;
+let targetZoom = 1;
+let zoomSpeed = 0.005;
+const minZoom = 1;
+const maxZoom = 1.5;
 
 const slingshotOffsetX = canvas.width * 0.6;
 const slingshotCenter = { x: slingshotOffsetX, y: canvas.height - 50 };
@@ -82,9 +82,12 @@ function draw() {
 
     // Fixed Background Image (won't shift for negative positions)
     const sectionIndex = Math.floor((distanceTraveled / 2000) % backgroundImages.length);
-    const currentBackground = backgroundImages[sectionIndex].image;
-    if (currentBackground) {
+    const currentBackground = backgroundImages[sectionIndex]?.image;
+
+    if (currentBackground && currentBackground.complete) {
         ctx.drawImage(currentBackground, 0, 0, canvas.width, canvas.height);
+    } else {
+        console.warn("Background image is undefined or not fully loaded.");
     }
 
     // Ground
@@ -185,11 +188,7 @@ function release() {
     }
 }
 
-
 // Dragging and release functions remain the same
-// Adjusted physics and scaling should now control the distance and appearance effectively
-
-// Restrict dragging to max pull-back distance and limit forward movement
 function startDrag(event) {
     if (!tire.inAir && !tire.rolling && tire.stopped) {
         isDragging = true;
@@ -215,22 +214,6 @@ function drag(event) {
             tire.x = currentX + cameraX;
             tire.y = currentY;
         }
-    }
-}
-
-function release() {
-    if (isDragging) {
-        isDragging = false;
-        tire.stopped = false;
-        tire.released = true;
-        releaseVelocityX = (slingshotCenter.x - tire.x) * slingPower / 50;
-        releaseVelocityY = (slingshotCenter.y - tire.y) * slingPower / 50;
-        tire.vx = releaseVelocityX;
-        tire.vy = releaseVelocityY;
-        tire.inAir = true;
-
-        tire.x = slingshotCenter.x;
-        tire.y = slingshotCenter.y;
     }
 }
 
@@ -300,7 +283,6 @@ function upgradePullBack() {
     }
 }
 
-update();
 canvas.addEventListener("mousedown", startDrag);
 canvas.addEventListener("mousemove", drag);
 canvas.addEventListener("mouseup", release);
