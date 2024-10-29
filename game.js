@@ -34,17 +34,29 @@ const tire = {
     released: false,
 };
 
-// Background images for each terrain type
+// Background images in the 'assets' folder
 const backgroundImages = [
-    { image: new Image(), src: "assets/forest.png" },  // Add paths to high-quality images
+    { image: new Image(), src: "assets/forest.png" },
     { image: new Image(), src: "assets/mountains.png" },
     { image: new Image(), src: "assets/desert.png" },
     { image: new Image(), src: "assets/plains.png" },
 ];
 
-// Load each image
-backgroundImages.forEach((bg) => {
+// Load each image and verify loading
+let imagesLoaded = 0;
+backgroundImages.forEach((bg, index) => {
     bg.image.src = bg.src;
+    bg.image.onload = () => {
+        imagesLoaded++;
+        if (imagesLoaded === backgroundImages.length) {
+            // Start the game only after all images are loaded
+            update();
+        }
+    };
+    bg.image.onerror = () => {
+        console.error(`Failed to load image at ${bg.src}`);
+        // Optional: Provide a fallback or skip this image
+    };
 });
 
 function draw() {
@@ -53,10 +65,13 @@ function draw() {
 
     // Select background image based on distance
     const sectionIndex = Math.floor((distanceTraveled / 2000) % backgroundImages.length);
-    const currentBackground = backgroundImages[sectionIndex].image;
+    const currentBackground = backgroundImages[sectionIndex]?.image;
 
-    // Draw background image (fixed, doesn't move with the ground)
-    ctx.drawImage(currentBackground, 0, 0, canvas.width, canvas.height);
+    if (currentBackground) {
+        ctx.drawImage(currentBackground, 0, 0, canvas.width, canvas.height);
+    } else {
+        console.warn("Background image is undefined. Check image loading.");
+    }
 
     // Ground (consistent brown rectangle)
     ctx.fillStyle = "#8B4513";
