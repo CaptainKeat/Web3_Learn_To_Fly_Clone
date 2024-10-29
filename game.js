@@ -20,6 +20,13 @@ let money = 0;
 const bounceFactor = 0.5;
 let poleHeightLevel = 0;
 
+// Variables for zoom and background persistence
+let zoomLevel = 1; // Start zoom level
+let targetZoom = 1; // Target zoom level after release
+let zoomSpeed = 0.005; // Smooth zoom speed
+const minZoom = 1; // Minimum zoom level at launch
+const maxZoom = 1.5; // Maximum zoom level after launch
+
 const slingshotOffsetX = canvas.width * 0.6;
 const slingshotCenter = { x: slingshotOffsetX, y: canvas.height - 50 };
 const tire = {
@@ -49,13 +56,11 @@ backgroundImages.forEach((bg, index) => {
     bg.image.onload = () => {
         imagesLoaded++;
         if (imagesLoaded === backgroundImages.length) {
-            // Start the game only after all images are loaded
             update();
         }
     };
     bg.image.onerror = () => {
         console.error(`Failed to load image at ${bg.src}`);
-        // Optional: Provide a fallback or skip this image
     };
 });
 
@@ -63,17 +68,26 @@ function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     cameraX = Math.max(0, tire.x - slingshotOffsetX);
 
-    // Select background image based on distance
-    const sectionIndex = Math.floor((distanceTraveled / 2000) % backgroundImages.length);
-    const currentBackground = backgroundImages[sectionIndex]?.image;
-
-    if (currentBackground) {
-        ctx.drawImage(currentBackground, 0, 0, canvas.width, canvas.height);
-    } else {
-        console.warn("Background image is undefined. Check image loading.");
+    // Smooth zoom animation
+    if (zoomLevel < targetZoom) {
+        zoomLevel += zoomSpeed;
+        if (zoomLevel > targetZoom) zoomLevel = targetZoom;
     }
 
-    // Ground (consistent brown rectangle)
+    // Translate and scale canvas for zoom effect
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.scale(zoomLevel, zoomLevel);
+    ctx.translate(-canvas.width / 2, -canvas.height / 2);
+
+    // Fixed Background Image (won't shift for negative positions)
+    const sectionIndex = Math.floor((distanceTraveled / 2000) % backgroundImages.length);
+    const currentBackground = backgroundImages[sectionIndex].image;
+    if (currentBackground) {
+        ctx.drawImage(currentBackground, 0, 0, canvas.width, canvas.height);
+    }
+
+    // Ground
     ctx.fillStyle = "#8B4513";
     ctx.fillRect(-cameraX, canvas.height - 30, canvas.width * 2, 30);
 
@@ -107,6 +121,9 @@ function draw() {
     ctx.fillStyle = "black";
     ctx.fill();
     ctx.restore();
+
+    // Restore scale and translation after zoom
+    ctx.restore();
 }
 
 // Update function for gameplay
@@ -137,6 +154,7 @@ function update() {
             money += distanceTraveled;
             document.getElementById("money").innerText = money;
             showUpgradeMenu();
+            targetZoom = minZoom; // Reset zoom when stopping
         }
     }
 
@@ -146,6 +164,27 @@ function update() {
     draw();
     requestAnimationFrame(update);
 }
+
+// Modify release function to initiate zoom on release
+function release() {
+    if (isDragging) {
+        isDragging = false;
+        tire.stopped = false;
+        tire.released = true;
+        releaseVelocityX = (slingshotCenter.x - tire.x) * slingPower / 50;
+        releaseVelocityY = (slingshotCenter.y - tire.y) * slingPower / 50;
+        tire.vx = releaseVelocityX;
+        tire.vy = releaseVelocityY;
+        tire.inAir = true;
+
+        tire.x = slingshotCenter.x;
+        tire.y = slingshotCenter.y;
+
+        // Activate zoom effect after release
+        targetZoom = maxZoom;
+    }
+}
+
 
 // Dragging and release functions remain the same
 // Adjusted physics and scaling should now control the distance and appearance effectively
