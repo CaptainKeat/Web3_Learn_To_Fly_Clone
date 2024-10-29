@@ -1,83 +1,102 @@
-const config = {
-    type: Phaser.AUTO,
-    width: 1200,
-    height: 800,
-    backgroundColor: '#87CEEB',
-    parent: 'game-container',
-    physics: {
-        default: 'matter',  // Use Matter physics
-        matter: {
-            gravity: { y: 1 },  // Adjusted gravity for better rolling physics
-            debug: true         // Enable debug to visualize collisions
-        }
-    },
-    scene: {
-        preload: preload,
-        create: create,
-        update: update
-    }
-};
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
 
-const game = new Phaser.Game(config);
-let spacebar, tire, ground, hillRamp, isLaunched = false, distance = 0;
+// Load assets
+const penguinImg = new Image();
+penguinImg.src = 'assets/tire.png';
 
-function preload() {
-    this.load.image('tire', 'assets/tire.png');      // Tire image
-    this.load.image('ground', 'assets/ground.png');  // Ground image
-    this.load.image('hill_ramp', 'assets/hill_ramp.png');  // Hill image
+const backgroundImg = new Image();
+backgroundImg.src = 'assets/hill_ramp.png';
+
+const obstacleImg = new Image();
+obstacleImg.src = 'assets/ramp.png';
+
+// Game variables
+let penguin = { x: 100, y: 500, velocityY: 0, isFlying: false };
+let gravity = 0.5;
+let launchPower = -15;
+let altitude = 0;
+let distance = 0;
+let obstacles = [];
+let backgroundX = 0;
+
+// Initialize obstacles
+function createObstacle() {
+    return {
+        x: canvas.width + Math.random() * 500,
+        y: Math.random() * 400 + 100,
+        width: 50,
+        height: 50
+    };
 }
 
-function create() {
-    // Display Title
-    this.add.text(20, 20, 'Learn to Fly Web3 Clone', { fontSize: '32px', fill: '#FFF' });
+// Game loop
+function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Ground setup - Static ground image that doesn't move
-    ground = this.matter.add.image(600, 780, 'ground', null, { isStatic: true });
-    ground.setScale(2);
-    
-    // Hill/Ramp setup - Static hill image with a rectangular collision box
-    hillRamp = this.matter.add.image(600, 650, 'hill_ramp', null, { isStatic: true });
-    hillRamp.setStatic(true);
-    hillRamp.setRectangle(400, 100); // Custom collision box to match the hill's general shape
-    
-    // Tire setup - Start at the top left of the hill, positioned higher
-    tire = this.matter.add.image(150, 500, 'tire');  // Adjusted position for the top left of the hill
-    tire.setCircle();  // Set to a circular body for rolling
-    tire.setBounce(0.2);
-    tire.setFriction(0.005);
-    tire.setCollideWorldBounds(true);
+    // Scroll background
+    backgroundX -= 2;
+    if (backgroundX <= -canvas.width) backgroundX = 0;
+    ctx.drawImage(backgroundImg, backgroundX, 0, canvas.width, canvas.height);
+    ctx.drawImage(backgroundImg, backgroundX + canvas.width, 0, canvas.width, canvas.height);
 
-    // Define the spacebar key
-    spacebar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    // Update physics if penguin is flying
+    if (penguin.isFlying) {
+        penguin.velocityY += gravity;
+        penguin.y += penguin.velocityY;
+        altitude = Math.max(600 - penguin.y, 0);
+        distance += 1;
 
-    // AudioContext handling
-    this.input.once('pointerdown', () => {
-        if (this.sound.context.state === 'suspended') {
-            this.sound.context.resume();
+        // Update stats in UI
+        document.getElementById("altitude").textContent = Math.floor(altitude);
+        document.getElementById("speed").textContent = Math.floor(Math.abs(penguin.velocityY) * 10);
+        document.getElementById("distance").textContent = distance;
+
+        // Stop at ground level
+        if (penguin.y >= 500) {
+            penguin.y = 500;
+            penguin.isFlying = false;
         }
+
+        // Check for collisions
+        obstacles.forEach(obstacle => {
+            if (penguin.x < obstacle.x + obstacle.width &&
+                penguin.x + 40 > obstacle.x &&
+                penguin.y < obstacle.y + obstacle.height &&
+                penguin.y + 40 > obstacle.y) {
+                penguin.isFlying = false;
+            }
+        });
+    }
+
+    // Move and draw obstacles
+    obstacles.forEach((obstacle, index) => {
+        obstacle.x -= 5;
+        if (obstacle.x < -50) obstacles[index] = createObstacle();
+        ctx.drawImage(obstacleImg, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
     });
 
-    // Distance tracker display
-    this.distanceText = this.add.text(20, 50, 'Distance: 0', { fontSize: '20px', fill: '#FFF' });
+    // Draw penguin
+    ctx.drawImage(penguinImg, penguin.x, penguin.y, 40, 40);
+
+    // Repeat
+    requestAnimationFrame(gameLoop);
 }
 
-function update() {
-    // Check for launch
-    if (Phaser.Input.Keyboard.JustDown(spacebar) && !isLaunched) {
-        isLaunched = true;
-        tire.setVelocityX(5); // Initial nudge to start rolling down
-    }
-
-    // Track distance as the tire moves
-    if (isLaunched && tire.body.velocity.x > 0) {
-        distance += tire.body.velocity.x * 0.016;
-        this.distanceText.setText('Distance: ' + Math.floor(distance));
-    }
-
-    // Check if tire has stopped moving
-    if (isLaunched && tire.body.velocity.x === 0) {
-        isLaunched = false;
-        this.distanceText.setText('Final Distance: ' + Math.floor(distance) + ' Press Space to Restart');
-        distance = 0;  // Reset for the next run
+// Launch function
+function launchPenguin() {
+    if (!penguin.isFlying) {
+        penguin.velocityY = launchPower;
+        penguin.isFlying = true;
     }
 }
+
+// Event listener for launch button
+document.getElementById("launchButton").addEventListener("click", launchPenguin);
+
+// Initialize game
+for (let i = 0; i < 5; i++) {
+    obstacles.push(createObstacle());
+}
+
+gameLoop();
