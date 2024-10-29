@@ -36,10 +36,10 @@ const tire = {
 
 // Background images for each terrain type
 const backgroundImages = [
-    { image: new Image(), src: "forest.png" },  // Add paths to high-quality images
-    { image: new Image(), src: "mountains.png" },
-    { image: new Image(), src: "desert.png" },
-    { image: new Image(), src: "plains.png" },
+    { image: new Image(), src: "assets/forest.png" },  // Add paths to high-quality images
+    { image: new Image(), src: "assets/mountains.png" },
+    { image: new Image(), src: "assets/desert.png" },
+    { image: new Image(), src: "assets/plains.png" },
 ];
 
 // Load each image
