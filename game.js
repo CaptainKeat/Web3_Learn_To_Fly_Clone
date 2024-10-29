@@ -5,10 +5,10 @@ const config = {
     backgroundColor: '#87CEEB',
     parent: 'game-container',
     physics: {
-        default: 'matter',  // Switch to Matter physics
+        default: 'matter',  // Use Matter physics
         matter: {
-            gravity: { y: 1 },  // Adjust gravity for Matter physics
-            debug: true
+            gravity: { y: 1 },  // Adjusted gravity for better rolling physics
+            debug: true         // Enable debug to visualize collisions
         }
     },
     scene: {
@@ -22,7 +22,7 @@ const game = new Phaser.Game(config);
 let spacebar, tire, ground, hillRamp, isLaunched = false, distance = 0;
 
 function preload() {
-    this.load.image('tire', 'assets/tire.png');  // Tire image
+    this.load.image('tire', 'assets/tire.png');      // Tire image
     this.load.image('ground', 'assets/ground.png');  // Ground image
     this.load.image('hill_ramp', 'assets/hill_ramp.png');  // Hill image
 }
@@ -31,26 +31,18 @@ function create() {
     // Display Title
     this.add.text(20, 20, 'Learn to Fly Web3 Clone', { fontSize: '32px', fill: '#FFF' });
 
-    // Ground setup
+    // Ground setup - Static ground image that doesn't move
     ground = this.matter.add.image(600, 780, 'ground', null, { isStatic: true });
     ground.setScale(2);
-    ground.setStatic(true);
-
-    // Hill/Ramp setup - Create a custom polygon for the hill's slope
+    
+    // Hill/Ramp setup - Static hill image with a rectangular collision box
     hillRamp = this.matter.add.image(600, 650, 'hill_ramp', null, { isStatic: true });
     hillRamp.setStatic(true);
-
-    // Adjust Matter body to fit the hill shape more closely
-    hillRamp.setBody({
-        type: 'polygon',
-        sides: 5,
-        radius: 250
-    });
-    hillRamp.setAngle(-15);  // Adjust slope angle
-
+    hillRamp.setRectangle(400, 100); // Custom collision box to match the hill's general shape
+    
     // Tire setup - Start at the top left of the hill, positioned higher
-    tire = this.matter.add.image(100, 250, 'tire');
-    tire.setCircle();
+    tire = this.matter.add.image(150, 500, 'tire');  // Adjusted position for the top left of the hill
+    tire.setCircle();  // Set to a circular body for rolling
     tire.setBounce(0.2);
     tire.setFriction(0.005);
     tire.setCollideWorldBounds(true);
