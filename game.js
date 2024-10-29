@@ -7,7 +7,9 @@ let distanceTraveled = 0;
 let slingPower = 10;
 let tireWeight = 1;
 let slingshotHeight = 100; // Initial slingshot pole height
-let bounceBoost = 5; // Boost power for tire bounce
+let bounceBoost = 5; // Power of bounce boost
+let bounceBoostCount = 0; // Tracks number of bounce boosts available
+let bounceBoostUsed = 0; // Tracks number of boosts used in each roll
 let isDragging = false;
 let startX, startY, releaseVelocityX, releaseVelocityY;
 let cameraX = 0;
@@ -15,8 +17,9 @@ let backgroundOffset = 0;
 let tireAngle = 0;
 let money = 0;
 
-const maxPullBackDistance = 400;
+const maxPullBackDistance = 100;
 const bounceFactor = 0.6;
+let poleHeightLevel = 0; // Tracks number of pole height upgrades
 
 // Slingshot and tire positioning
 const slingshotOffsetX = canvas.width * 0.6;
@@ -136,6 +139,7 @@ function update() {
             tire.rolling = false;
             tire.stopped = true;
             tire.released = false;
+            bounceBoostUsed = 0; // Reset boost usage
             money += distanceTraveled;
             document.getElementById("money").innerText = money;
             showUpgradeMenu();
@@ -194,12 +198,13 @@ function release() {
     }
 }
 
-// Bounce Boost activation on Space key press
+// Bounce Boost activation on Space key press, with usage limitation
 document.addEventListener("keydown", (event) => {
-    if (event.code === "Space" && tire.rolling) {
+    if (event.code === "Space" && tire.rolling && bounceBoostUsed < bounceBoostCount) {
         tire.vy = -bounceBoost;
-        tire.vx += 1; // Add a slight horizontal boost as well
+        tire.vx += 1;
         tire.inAir = true;
+        bounceBoostUsed++;
     }
 });
 
@@ -233,7 +238,9 @@ function upgradeTire() {
 function upgradePoleHeight() {
     if (money >= 10) {
         money -= 10;
-        slingshotHeight += 20; // Increase pole height by 1 meter (20 pixels)
+        slingshotHeight += 20;
+        poleHeightLevel++;
+        document.getElementById("poleLevel").innerText = poleHeightLevel;
         document.getElementById("money").innerText = money;
     }
 }
@@ -241,7 +248,8 @@ function upgradePoleHeight() {
 function upgradeBounceBoost() {
     if (money >= 10) {
         money -= 10;
-        bounceBoost += 2; // Increase bounce boost power
+        bounceBoostCount++;
+        document.getElementById("boostLevel").innerText = bounceBoostCount;
         document.getElementById("money").innerText = money;
     }
 }
