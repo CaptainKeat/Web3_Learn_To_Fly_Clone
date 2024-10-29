@@ -17,7 +17,7 @@ let backgroundOffset = 0;
 let tireAngle = 0;
 let money = 0;
 
-const maxPullBackDistance = 100;
+const maxPullBackDistance = 300;
 const bounceFactor = 0.6;
 let poleHeightLevel = 0; // Tracks number of pole height upgrades
 
