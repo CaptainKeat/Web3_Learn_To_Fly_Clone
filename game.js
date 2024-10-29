@@ -25,16 +25,24 @@ const tire = {
     rolling: false,
 };
 
-// Draw Function
+// Draw Function with Parallax Background
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Calculate camera offset
     cameraX = Math.max(0, tire.x - slingshotOffsetX);
 
-    // Draw Background (Simple Parallax)
+    // Draw Sky Background (Static)
     ctx.fillStyle = "#87CEEB"; // Sky color
-    ctx.fillRect(0, 0, canvas.width, canvas.height - 30);
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw Distant Hills (Slow-moving layer)
+    drawHills(-cameraX * 0.3);
+
+    // Draw Trees in Foreground (Faster-moving layer)
+    drawTrees(-cameraX * 0.6);
+
+    // Draw Ground
     ctx.fillStyle = "#8B4513"; // Ground color
     ctx.fillRect(-cameraX + backgroundOffset, canvas.height - 30, canvas.width * 2, 30);
 
@@ -68,6 +76,33 @@ function draw() {
     ctx.fillStyle = "black";
     ctx.fill();
     ctx.restore();
+}
+
+// Function to draw distant hills
+function drawHills(offset) {
+    ctx.fillStyle = "#556B2F"; // Dark green color for distant hills
+    ctx.beginPath();
+    ctx.moveTo(offset, canvas.height - 50);
+    for (let i = 0; i < canvas.width + 100; i += 100) {
+        let hillHeight = 30 + Math.sin(i * 0.01) * 20; // Variation in height
+        ctx.lineTo(offset + i, canvas.height - 50 - hillHeight);
+    }
+    ctx.lineTo(canvas.width, canvas.height);
+    ctx.lineTo(0, canvas.height);
+    ctx.fill();
+}
+
+// Function to draw foreground trees
+function drawTrees(offset) {
+    ctx.fillStyle = "#228B22"; // Green color for trees
+    for (let i = 0; i < canvas.width + 100; i += 150) {
+        ctx.beginPath();
+        ctx.moveTo(offset + i, canvas.height - 30);
+        ctx.lineTo(offset + i + 20, canvas.height - 80);
+        ctx.lineTo(offset + i - 20, canvas.height - 80);
+        ctx.closePath();
+        ctx.fill();
+    }
 }
 
 // Update Function
