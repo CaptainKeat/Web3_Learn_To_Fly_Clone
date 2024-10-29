@@ -152,14 +152,25 @@ function update() {
             tire.released = false;
             bounceBoostUsed = 0;
             money += distanceTraveled;
-            document.getElementById("money").innerText = money;
+
+            // Update money display if element exists
+            const moneyElement = document.getElementById("money");
+            if (moneyElement) {
+                moneyElement.innerText = money;
+            }
+
             showUpgradeMenu();
             targetZoom = minZoom; // Reset zoom when stopping
         }
     }
 
     distanceTraveled = Math.round(tire.x - slingshotCenter.x);
-    document.getElementById("distance").innerText = distanceTraveled + " meters";
+
+    // Update distance display if element exists
+    const distanceElement = document.getElementById("distance");
+    if (distanceElement) {
+        distanceElement.innerText = distanceTraveled;
+    }
 
     draw();
     requestAnimationFrame(update);

@@ -11,7 +11,7 @@
       align-items: center;
       height: 100vh;
       margin: 0;
-      background-color: #87CEEB; /* Soft blue for a sky-like background */
+      background-color: #87CEEB;
     }
     #gameContainer {
       width: 800px;
@@ -26,11 +26,23 @@
       width: 100%;
       height: 100%;
     }
+    #statusDisplay {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: #333;
+      font-size: 16px;
+      font-family: Arial, sans-serif;
+    }
   </style>
 </head>
 <body>
   <div id="gameContainer">
     <canvas id="gameCanvas"></canvas>
+    <div id="statusDisplay">
+      <div>Money: <span id="money">0</span></div>
+      <div>Distance: <span id="distance">0</span> meters</div>
+    </div>
   </div>
   <script src="game.js"></script>
 </body>
