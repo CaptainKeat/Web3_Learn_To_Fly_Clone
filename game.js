@@ -11,9 +11,10 @@ let startX, startY, releaseVelocityX, releaseVelocityY;
 let backgroundX = 0;
 
 // Tire Position and Sling
+const slingshotCenter = { x: 100, y: canvas.height - 50 };
 const tire = {
-    x: 100,
-    y: canvas.height - 50,
+    x: slingshotCenter.x,
+    y: slingshotCenter.y,
     radius: 20,
     vx: 0,
     vy: 0,
@@ -29,17 +30,26 @@ function draw() {
     ctx.fillStyle = "#8B4513"; // Ground color
     ctx.fillRect(0, canvas.height - 30, canvas.width, 30);
 
-    // Draw Sling
+    // Draw Slingshot Arms
     ctx.beginPath();
-    ctx.moveTo(100, canvas.height - 50);
-    if (isDragging) {
-        ctx.lineTo(tire.x, tire.y);
-    } else {
-        ctx.lineTo(tire.x - 30, tire.y); // Static look for sling when not pulled
-    }
+    ctx.moveTo(slingshotCenter.x - 20, slingshotCenter.y);
+    ctx.lineTo(slingshotCenter.x - 20, slingshotCenter.y - 100);
+    ctx.moveTo(slingshotCenter.x + 20, slingshotCenter.y);
+    ctx.lineTo(slingshotCenter.x + 20, slingshotCenter.y - 100);
     ctx.strokeStyle = "brown";
-    ctx.lineWidth = 5;
+    ctx.lineWidth = 8;
     ctx.stroke();
+
+    // Draw Rubber Band
+    if (isDragging || tire.inAir) {
+        ctx.beginPath();
+        ctx.moveTo(slingshotCenter.x - 20, slingshotCenter.y - 100);
+        ctx.lineTo(tire.x, tire.y);
+        ctx.lineTo(slingshotCenter.x + 20, slingshotCenter.y - 100);
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
 
     // Draw Tire
     ctx.beginPath();
@@ -110,13 +120,15 @@ function drag(event) {
 function release() {
     if (isDragging) {
         isDragging = false;
-        releaseVelocityX = (100 - tire.x) * slingPower / 50;
-        releaseVelocityY = (canvas.height - 50 - tire.y) * slingPower / 50;
+        releaseVelocityX = (slingshotCenter.x - tire.x) * slingPower / 50;
+        releaseVelocityY = (slingshotCenter.y - tire.y) * slingPower / 50;
         tire.vx = releaseVelocityX;
         tire.vy = releaseVelocityY;
         tire.inAir = true;
-        tire.x = 100;
-        tire.y = canvas.height - 50;
+
+        // Reset tire back to slingshot origin visually
+        tire.x = slingshotCenter.x;
+        tire.y = slingshotCenter.y;
     }
 }
 
