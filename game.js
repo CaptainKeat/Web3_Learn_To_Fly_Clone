@@ -10,8 +10,8 @@ let isDragging = false;
 let startX, startY, releaseVelocityX, releaseVelocityY;
 let backgroundX = 0;
 
-// Tire Position and Sling
-const slingshotCenter = { x: 100, y: canvas.height - 50 };
+// Adjusted slingshot position to center horizontally
+const slingshotCenter = { x: canvas.width / 3, y: canvas.height - 50 };
 const tire = {
     x: slingshotCenter.x,
     y: slingshotCenter.y,
@@ -81,11 +81,11 @@ function update() {
         }
     }
 
-    // Scroll background
+    // Scroll background and update distance counter
     if (tire.x > canvas.width / 2) {
         backgroundX -= tire.vx;
         distanceTraveled += Math.abs(tire.vx);
-        document.getElementById("distance").innerText = Math.round(distanceTraveled);
+        document.getElementById("distance").innerText = Math.round(distanceTraveled) + " meters";
     }
 
     draw();
