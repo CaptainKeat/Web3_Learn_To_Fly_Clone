@@ -6,7 +6,7 @@ canvas.height = window.innerHeight * 0.7;
 let distanceTraveled = 0;
 let slingPower = 10;
 let tireWeight = 1;
-let slingshotHeight = 400; // Initial slingshot pole height
+let slingshotHeight = 100; // Initial slingshot pole height
 let bounceBoost = 5; // Boost power for tire bounce
 let isDragging = false;
 let startX, startY, releaseVelocityX, releaseVelocityY;
@@ -15,7 +15,7 @@ let backgroundOffset = 0;
 let tireAngle = 0;
 let money = 0;
 
-const maxPullBackDistance = 100;
+const maxPullBackDistance = 400;
 const bounceFactor = 0.6;
 
 // Slingshot and tire positioning
