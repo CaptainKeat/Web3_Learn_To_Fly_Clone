@@ -8,25 +8,35 @@ let slingPower = 10;
 let tireWeight = 1;
 let isDragging = false;
 let startX, startY, releaseVelocityX, releaseVelocityY;
+let backgroundX = 0;
 
 // Tire Position and Sling
 const tire = {
-    x: canvas.width / 2,
+    x: 100,
     y: canvas.height - 50,
     radius: 20,
     vx: 0,
     vy: 0,
     inAir: false,
+    rolling: false,
 };
 
 // Draw Function
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Draw Background
+    ctx.fillStyle = "#8B4513"; // Ground color
+    ctx.fillRect(0, canvas.height - 30, canvas.width, 30);
+
     // Draw Sling
     ctx.beginPath();
-    ctx.moveTo(tire.x, tire.y);
-    ctx.lineTo(canvas.width / 2, canvas.height - 50);
+    ctx.moveTo(100, canvas.height - 50);
+    if (isDragging) {
+        ctx.lineTo(tire.x, tire.y);
+    } else {
+        ctx.lineTo(tire.x - 30, tire.y); // Static look for sling when not pulled
+    }
     ctx.strokeStyle = "brown";
     ctx.lineWidth = 5;
     ctx.stroke();
@@ -42,16 +52,32 @@ function draw() {
 function update() {
     if (tire.inAir) {
         tire.vy += 0.5 * tireWeight; // Gravity effect
+        tire.vx *= 0.99; // Air friction
         tire.x += tire.vx;
         tire.y += tire.vy;
-        distanceTraveled = Math.max(distanceTraveled, Math.round(tire.x - canvas.width / 2));
-        
-        // Stop when hitting the ground
+
+        // Tire lands on ground
         if (tire.y >= canvas.height - 50) {
             tire.inAir = false;
-            document.getElementById("distance").innerText = distanceTraveled;
+            tire.rolling = true;
+            tire.y = canvas.height - 50;
+        }
+    } else if (tire.rolling) {
+        // Tire rolling on ground
+        tire.vx *= 0.98; // Ground friction
+        tire.x += tire.vx;
+        if (Math.abs(tire.vx) < 0.1) {
+            tire.rolling = false; // Stop if too slow
         }
     }
+
+    // Scroll background
+    if (tire.x > canvas.width / 2) {
+        backgroundX -= tire.vx;
+        distanceTraveled += Math.abs(tire.vx);
+        document.getElementById("distance").innerText = Math.round(distanceTraveled);
+    }
+
     draw();
     requestAnimationFrame(update);
 }
@@ -65,7 +91,7 @@ canvas.addEventListener("mouseup", release);
 canvas.addEventListener("touchend", release);
 
 function startDrag(event) {
-    if (!tire.inAir) {
+    if (!tire.inAir && !tire.rolling) {
         isDragging = true;
         startX = event.touches ? event.touches[0].clientX : event.clientX;
         startY = event.touches ? event.touches[0].clientY : event.clientY;
@@ -84,12 +110,12 @@ function drag(event) {
 function release() {
     if (isDragging) {
         isDragging = false;
-        releaseVelocityX = (canvas.width / 2 - tire.x) * slingPower / 50;
+        releaseVelocityX = (100 - tire.x) * slingPower / 50;
         releaseVelocityY = (canvas.height - 50 - tire.y) * slingPower / 50;
         tire.vx = releaseVelocityX;
         tire.vy = releaseVelocityY;
         tire.inAir = true;
-        tire.x = canvas.width / 2;
+        tire.x = 100;
         tire.y = canvas.height - 50;
     }
 }
