@@ -49,11 +49,13 @@ const backgroundImages = [
 
 // Load each image and verify loading
 let imagesLoaded = 0;
+let allImagesLoaded = false;
 backgroundImages.forEach((bg) => {
     bg.image.src = bg.src;
     bg.image.onload = () => {
         imagesLoaded++;
         if (imagesLoaded === backgroundImages.length) {
+            allImagesLoaded = true;
             update();
         }
     };
@@ -78,13 +80,15 @@ function draw() {
     ctx.translate(-tire.x, -tire.y);
 
     // Persistent Background Image (fixed at 0,0)
-    const sectionIndex = Math.floor((distanceTraveled / 2000) % backgroundImages.length);
-    const currentBackground = backgroundImages[sectionIndex]?.image;
+    if (allImagesLoaded) {
+        const sectionIndex = Math.floor((distanceTraveled / 2000) % backgroundImages.length);
+        const currentBackground = backgroundImages[sectionIndex]?.image;
 
-    if (currentBackground && currentBackground.complete) {
-        ctx.drawImage(currentBackground, -canvas.width, 0, canvas.width * 3, canvas.height);
-    } else {
-        console.warn("Background image is undefined or not fully loaded.");
+        if (currentBackground && currentBackground.complete) {
+            ctx.drawImage(currentBackground, -canvas.width, 0, canvas.width * 3, canvas.height);
+        } else {
+            console.warn("Background image is undefined or not fully loaded.");
+        }
     }
 
     // Ground
@@ -235,14 +239,21 @@ document.addEventListener("keydown", (event) => {
 });
 
 function showUpgradeMenu() {
-    document.getElementById("upgradeMenu").classList.remove("hidden");
+    const upgradeMenu = document.getElementById("upgradeMenu");
+    if (upgradeMenu) {
+        upgradeMenu.style.display = "block";
+    }
 }
 
 function closeUpgradeMenu() {
-    document.getElementById("upgradeMenu").classList.add("hidden");
+    const upgradeMenu = document.getElementById("upgradeMenu");
+    if (upgradeMenu) {
+        upgradeMenu.style.display = "none";
+    }
     tire.x = slingshotCenter.x;
     tire.y = slingshotCenter.y;
 }
+
 canvas.addEventListener("mousedown", startDrag);
 canvas.addEventListener("mousemove", drag);
 canvas.addEventListener("mouseup", release);

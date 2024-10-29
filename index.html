@@ -34,6 +34,16 @@
       font-size: 16px;
       font-family: Arial, sans-serif;
     }
+    #upgradeMenu {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #f9f9f9;
+      border: 1px solid #333;
+      padding: 10px;
+      display: none; /* Initially hidden */
+    }
   </style>
 </head>
 <body>
@@ -42,6 +52,14 @@
     <div id="statusDisplay">
       <div>Money: <span id="money">0</span></div>
       <div>Distance: <span id="distance">0</span> meters</div>
+    </div>
+    <div id="upgradeMenu">
+      <button onclick="upgradeSling()">Upgrade Sling</button>
+      <button onclick="upgradeTire()">Upgrade Tire</button>
+      <button onclick="upgradePoleHeight()">Upgrade Pole Height</button>
+      <button onclick="upgradeBounceBoost()">Upgrade Bounce Boost</button>
+      <button onclick="upgradePullBack()">Upgrade Pull Back</button>
+      <button onclick="closeUpgradeMenu()">Close</button>
     </div>
   </div>
   <script src="game.js"></script>
