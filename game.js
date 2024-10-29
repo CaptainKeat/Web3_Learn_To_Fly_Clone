@@ -66,7 +66,6 @@ backgroundImages.forEach((bg, index) => {
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    cameraX = Math.max(0, tire.x - slingshotOffsetX);
 
     // Smooth zoom animation
     if (zoomLevel < targetZoom) {
@@ -74,13 +73,13 @@ function draw() {
         if (zoomLevel > targetZoom) zoomLevel = targetZoom;
     }
 
-    // Translate and scale canvas for zoom effect
+    // Translate and scale canvas for zoom effect centered on the tire
     ctx.save();
     ctx.translate(canvas.width / 2, canvas.height / 2);
     ctx.scale(zoomLevel, zoomLevel);
-    ctx.translate(-canvas.width / 2, -canvas.height / 2);
+    ctx.translate(-tire.x, -tire.y);
 
-    // Fixed Background Image (won't shift for negative positions)
+    // Fixed Background Image (stays at (0,0) regardless of the tire's position)
     const sectionIndex = Math.floor((distanceTraveled / 2000) % backgroundImages.length);
     const currentBackground = backgroundImages[sectionIndex]?.image;
 
@@ -92,14 +91,14 @@ function draw() {
 
     // Ground
     ctx.fillStyle = "#8B4513";
-    ctx.fillRect(-cameraX, canvas.height - 30, canvas.width * 2, 30);
+    ctx.fillRect(-canvas.width, canvas.height - 30, canvas.width * 3, 30);
 
     // Slingshot Arms
     ctx.beginPath();
-    ctx.moveTo(slingshotCenter.x - 20 - cameraX, slingshotCenter.y);
-    ctx.lineTo(slingshotCenter.x - 20 - cameraX, slingshotCenter.y - slingshotHeight);
-    ctx.moveTo(slingshotCenter.x + 20 - cameraX, slingshotCenter.y);
-    ctx.lineTo(slingshotCenter.x + 20 - cameraX, slingshotCenter.y - slingshotHeight);
+    ctx.moveTo(slingshotCenter.x - 20, slingshotCenter.y);
+    ctx.lineTo(slingshotCenter.x - 20, slingshotCenter.y - slingshotHeight);
+    ctx.moveTo(slingshotCenter.x + 20, slingshotCenter.y);
+    ctx.lineTo(slingshotCenter.x + 20, slingshotCenter.y - slingshotHeight);
     ctx.strokeStyle = "brown";
     ctx.lineWidth = 8;
     ctx.stroke();
@@ -107,9 +106,9 @@ function draw() {
     // Rubber Band
     if (isDragging || (!tire.released && tire.inAir)) {
         ctx.beginPath();
-        ctx.moveTo(slingshotCenter.x - 20 - cameraX, slingshotCenter.y - slingshotHeight);
-        ctx.lineTo(tire.x - cameraX, tire.y);
-        ctx.lineTo(slingshotCenter.x + 20 - cameraX, slingshotCenter.y - slingshotHeight);
+        ctx.moveTo(slingshotCenter.x - 20, slingshotCenter.y - slingshotHeight);
+        ctx.lineTo(tire.x, tire.y);
+        ctx.lineTo(slingshotCenter.x + 20, slingshotCenter.y - slingshotHeight);
         ctx.strokeStyle = "black";
         ctx.lineWidth = 2;
         ctx.stroke();
@@ -117,7 +116,7 @@ function draw() {
 
     // Draw Tire with Rotation Effect
     ctx.save();
-    ctx.translate(tire.x - cameraX, tire.y);
+    ctx.translate(tire.x, tire.y);
     ctx.rotate(tireAngle);
     ctx.beginPath();
     ctx.arc(0, 0, tire.radius, 0, Math.PI * 2);
@@ -202,7 +201,7 @@ function drag(event) {
         let currentX = event.touches ? event.touches[0].clientX : event.clientX;
         let currentY = event.touches ? event.touches[0].clientY : event.clientY;
 
-        let dx = currentX + cameraX - slingshotCenter.x;
+        let dx = currentX - slingshotCenter.x;
         let dy = currentY - slingshotCenter.y;
         let distance = Math.sqrt(dx * dx + dy * dy);
 
@@ -211,7 +210,7 @@ function drag(event) {
             tire.x = slingshotCenter.x + Math.cos(angle) * maxPullBackDistance;
             tire.y = slingshotCenter.y + Math.sin(angle) * maxPullBackDistance;
         } else {
-            tire.x = currentX + cameraX;
+            tire.x = currentX;
             tire.y = currentY;
         }
     }
