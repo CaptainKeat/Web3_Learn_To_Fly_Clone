@@ -2,8 +2,8 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
 // Load assets
-const penguinImg = new Image();
-penguinImg.src = 'assets/tire.png';
+const tireImg = new Image();
+tireImg.src = 'assets/tire.png';
 
 const hillImg = new Image();
 hillImg.src = 'assets/hill_ramp.png';
@@ -18,13 +18,19 @@ const backgrounds = [
 });
 
 // Game variables
-let penguin = { x: 50, y: 400, velocityX: 0, velocityY: 0, isSliding: false, isAirborne: false };
+let tire = { x: 50, y: 400, velocityX: 0, velocityY: 0, isSliding: false, isAirborne: false };
 let gravity = 0.5;
-let friction = 0.05;
 let slideAcceleration = 0.2;
 let altitude = 0;
 let distance = 0;
 let currentBackgroundIndex = 0;
+
+// Hill slope function
+function getHillY(x) {
+    // This function defines the hill's shape.
+    if (x < 250) return 400 + (x * 0.4); // Adjust slope based on x position
+    return 500; // Flat ground after hill
+}
 
 // Game loop
 function gameLoop() {
@@ -33,36 +39,39 @@ function gameLoop() {
     // Draw background
     ctx.drawImage(backgrounds[currentBackgroundIndex], 0, 0, canvas.width, canvas.height);
 
-    // Update penguin physics
-    if (penguin.isSliding) {
-        penguin.velocityX += slideAcceleration;
-        penguin.x += penguin.velocityX;
+    // Update tire physics
+    if (tire.isSliding) {
+        tire.velocityX += slideAcceleration;
+        tire.x += tire.velocityX;
+
+        // Keep the tire on the hill's slope
+        tire.y = getHillY(tire.x);
 
         // Launch off the hill once it reaches the end
-        if (penguin.x > 250) {
-            penguin.isSliding = false;
-            penguin.isAirborne = true;
-            penguin.velocityY = -penguin.velocityX * 0.7; // Adjust upward velocity based on slide speed
+        if (tire.x > 250) {
+            tire.isSliding = false;
+            tire.isAirborne = true;
+            tire.velocityY = -tire.velocityX * 0.7; // Adjust upward velocity based on slide speed
         }
     }
 
-    if (penguin.isAirborne) {
-        penguin.velocityY += gravity;
-        penguin.y += penguin.velocityY;
-        penguin.x += penguin.velocityX;
+    if (tire.isAirborne) {
+        tire.velocityY += gravity;
+        tire.y += tire.velocityY;
+        tire.x += tire.velocityX;
 
-        altitude = Math.max(600 - penguin.y, 0);
-        distance += penguin.velocityX * 0.1;
+        altitude = Math.max(600 - tire.y, 0);
+        distance += tire.velocityX * 0.1;
 
         document.getElementById("altitude").textContent = Math.floor(altitude);
-        document.getElementById("speed").textContent = Math.floor(Math.abs(penguin.velocityX) * 10);
+        document.getElementById("speed").textContent = Math.floor(Math.abs(tire.velocityX) * 10);
         document.getElementById("distance").textContent = Math.floor(distance);
 
-        // Land if penguin reaches the ground
-        if (penguin.y >= 500) {
-            penguin.y = 500;
-            penguin.isAirborne = false;
-            penguin.velocityX *= 0.9; // Slow down on landing
+        // Land if tire reaches the ground
+        if (tire.y >= 500) {
+            tire.y = 500;
+            tire.isAirborne = false;
+            tire.velocityX *= 0.9; // Slow down on landing
         }
 
         // Change background based on distance
@@ -71,9 +80,9 @@ function gameLoop() {
         }
     }
 
-    // Draw hill and penguin
-    if (!penguin.isAirborne) ctx.drawImage(hillImg, 0, 400, 300, 200);
-    ctx.drawImage(penguinImg, penguin.x, penguin.y, 40, 40);
+    // Draw hill and tire
+    if (!tire.isAirborne) ctx.drawImage(hillImg, 0, 400, 300, 200);
+    ctx.drawImage(tireImg, tire.x, tire.y, 40, 40);
 
     // Repeat the game loop
     requestAnimationFrame(gameLoop);
@@ -81,9 +90,9 @@ function gameLoop() {
 
 // Event listener for starting the slide with Spacebar
 document.addEventListener("keydown", (e) => {
-    if (e.code === "Space" && !penguin.isSliding && !penguin.isAirborne) {
-        penguin.isSliding = true;
-        penguin.velocityX = 0;
+    if (e.code === "Space" && !tire.isSliding && !tire.isAirborne) {
+        tire.isSliding = true;
+        tire.velocityX = 0;
     }
 });
 
