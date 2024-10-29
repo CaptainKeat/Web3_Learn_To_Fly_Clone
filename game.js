@@ -3,100 +3,90 @@ const ctx = canvas.getContext("2d");
 
 // Load assets
 const penguinImg = new Image();
-penguinImg.src = 'assets/tire.png';
+penguinImg.src = 'assets/penguin.png';
 
-const backgroundImg = new Image();
-backgroundImg.src = 'assets/hill_ramp.png';
+const hillImg = new Image();
+hillImg.src = 'assets/hill.png';
 
-const obstacleImg = new Image();
-obstacleImg.src = 'assets/ramp.png';
+const backgrounds = [
+    'assets/background1.png',
+    'assets/background2.png',
+    'assets/background3.png'
+].map(src => {
+    const img = new Image();
+    img.src = src;
+    return img;
+});
 
 // Game variables
-let penguin = { x: 100, y: 500, velocityY: 0, isFlying: false };
+let penguin = { x: 50, y: 400, velocityX: 0, velocityY: 0, isSliding: false, isAirborne: false };
 let gravity = 0.5;
-let launchPower = -15;
+let friction = 0.05;
+let slideAcceleration = 0.2;
 let altitude = 0;
 let distance = 0;
-let obstacles = [];
-let backgroundX = 0;
-
-// Initialize obstacles
-function createObstacle() {
-    return {
-        x: canvas.width + Math.random() * 500,
-        y: Math.random() * 400 + 100,
-        width: 50,
-        height: 50
-    };
-}
+let currentBackgroundIndex = 0;
 
 // Game loop
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Scroll background
-    backgroundX -= 2;
-    if (backgroundX <= -canvas.width) backgroundX = 0;
-    ctx.drawImage(backgroundImg, backgroundX, 0, canvas.width, canvas.height);
-    ctx.drawImage(backgroundImg, backgroundX + canvas.width, 0, canvas.width, canvas.height);
+    // Draw background
+    ctx.drawImage(backgrounds[currentBackgroundIndex], 0, 0, canvas.width, canvas.height);
 
-    // Update physics if penguin is flying
-    if (penguin.isFlying) {
-        penguin.velocityY += gravity;
-        penguin.y += penguin.velocityY;
-        altitude = Math.max(600 - penguin.y, 0);
-        distance += 1;
+    // Update penguin physics
+    if (penguin.isSliding) {
+        penguin.velocityX += slideAcceleration;
+        penguin.x += penguin.velocityX;
 
-        // Update stats in UI
-        document.getElementById("altitude").textContent = Math.floor(altitude);
-        document.getElementById("speed").textContent = Math.floor(Math.abs(penguin.velocityY) * 10);
-        document.getElementById("distance").textContent = distance;
-
-        // Stop at ground level
-        if (penguin.y >= 500) {
-            penguin.y = 500;
-            penguin.isFlying = false;
+        // Launch off the hill once it reaches the end
+        if (penguin.x > 250) {
+            penguin.isSliding = false;
+            penguin.isAirborne = true;
+            penguin.velocityY = -penguin.velocityX * 0.7; // Adjust upward velocity based on slide speed
         }
-
-        // Check for collisions
-        obstacles.forEach(obstacle => {
-            if (penguin.x < obstacle.x + obstacle.width &&
-                penguin.x + 40 > obstacle.x &&
-                penguin.y < obstacle.y + obstacle.height &&
-                penguin.y + 40 > obstacle.y) {
-                penguin.isFlying = false;
-            }
-        });
     }
 
-    // Move and draw obstacles
-    obstacles.forEach((obstacle, index) => {
-        obstacle.x -= 5;
-        if (obstacle.x < -50) obstacles[index] = createObstacle();
-        ctx.drawImage(obstacleImg, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-    });
+    if (penguin.isAirborne) {
+        penguin.velocityY += gravity;
+        penguin.y += penguin.velocityY;
+        penguin.x += penguin.velocityX;
 
-    // Draw penguin
+        altitude = Math.max(600 - penguin.y, 0);
+        distance += penguin.velocityX * 0.1;
+
+        document.getElementById("altitude").textContent = Math.floor(altitude);
+        document.getElementById("speed").textContent = Math.floor(Math.abs(penguin.velocityX) * 10);
+        document.getElementById("distance").textContent = Math.floor(distance);
+
+        // Land if penguin reaches the ground
+        if (penguin.y >= 500) {
+            penguin.y = 500;
+            penguin.isAirborne = false;
+            penguin.velocityX *= 0.9; // Slow down on landing
+        }
+
+        // Change background based on distance
+        if (distance > 200 && currentBackgroundIndex < backgrounds.length - 1) {
+            currentBackgroundIndex++;
+        }
+    }
+
+    // Draw hill and penguin
+    if (!penguin.isAirborne) ctx.drawImage(hillImg, 0, 400, 300, 200);
     ctx.drawImage(penguinImg, penguin.x, penguin.y, 40, 40);
 
-    // Repeat
+    // Repeat the game loop
     requestAnimationFrame(gameLoop);
 }
 
-// Launch function
-function launchPenguin() {
-    if (!penguin.isFlying) {
-        penguin.velocityY = launchPower;
-        penguin.isFlying = true;
+// Event listener for starting the slide with Spacebar
+document.addEventListener("keydown", (e) => {
+    if (e.code === "Space" && !penguin.isSliding && !penguin.isAirborne) {
+        penguin.isSliding = true;
+        penguin.velocityX = 0;
     }
-}
+});
 
-// Event listener for launch button
-document.getElementById("launchButton").addEventListener("click", launchPenguin);
-
-// Initialize game
-for (let i = 0; i < 5; i++) {
-    obstacles.push(createObstacle());
-}
-
+// Start game loop
 gameLoop();
