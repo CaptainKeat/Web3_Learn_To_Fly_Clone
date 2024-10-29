@@ -4,20 +4,20 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight * 0.7;
 
 let distanceTraveled = 0;
-let slingPower = 10;
+let slingPower = 4;  // Reduced sling power for shorter launches
 let tireWeight = 1;
-let slingshotHeight = 100;
-let bounceBoost = 5;
+let slingshotHeight = 80; // Adjusted slingshot height for smaller tire
+let bounceBoost = 3;
 let bounceBoostCount = 0;
 let bounceBoostUsed = 0;
-let maxPullBackDistance = 100;
+let maxPullBackDistance = 70; // Adjusted max pull-back distance
 let pullBackLevel = 0;
 let isDragging = false;
 let startX, startY, releaseVelocityX, releaseVelocityY;
 let cameraX = 0;
 let tireAngle = 0;
 let money = 0;
-const bounceFactor = 0.6;
+const bounceFactor = 0.5;
 let poleHeightLevel = 0;
 
 const slingshotOffsetX = canvas.width * 0.6;
@@ -25,7 +25,7 @@ const slingshotCenter = { x: slingshotOffsetX, y: canvas.height - 50 };
 const tire = {
     x: slingshotCenter.x,
     y: slingshotCenter.y,
-    radius: 20,
+    radius: 15,  // Smaller tire radius for car tire size
     vx: 0,
     vy: 0,
     inAir: false,
@@ -158,27 +158,27 @@ function drawTrees(offset) {
     }
 }
 
-// Update function with bounce physics, ground friction, and bounce boost
+// Update function with adjusted physics
 function update() {
     if (tire.inAir) {
-        tire.vy += 0.5 * tireWeight;
-        tire.vx *= 0.99;
+        tire.vy += 0.3 * tireWeight; // Adjusted gravity for smaller scale
+        tire.vx *= 0.98;
         tire.x += tire.vx;
         tire.y += tire.vy;
         tireAngle += tire.vx / tire.radius;
 
         if (tire.y >= canvas.height - 50) {
-            tire.inAir = tire.vy > 2;
+            tire.inAir = tire.vy > 1.5;
             tire.rolling = !tire.inAir;
             tire.vy = -tire.vy * bounceFactor;
             tire.y = canvas.height - 50;
         }
     } else if (tire.rolling) {
-        tire.vx *= 0.98;
+        tire.vx *= 0.96;
         tire.x += tire.vx;
         tireAngle += tire.vx / tire.radius;
 
-        if (Math.abs(tire.vx) < 0.1) {
+        if (Math.abs(tire.vx) < 0.05) {
             tire.rolling = false;
             tire.stopped = true;
             tire.released = false;
@@ -196,9 +196,8 @@ function update() {
     requestAnimationFrame(update);
 }
 
-// Dragging, release, and upgrade functions remain the same as previous
-// (For brevity, only the update draw and background functions were changed as per your request)
-
+// Dragging and release functions remain the same
+// Adjusted physics and scaling should now control the distance and appearance effectively
 
 // Restrict dragging to max pull-back distance and limit forward movement
 function startDrag(event) {
