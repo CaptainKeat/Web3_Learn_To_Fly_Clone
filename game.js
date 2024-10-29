@@ -6,22 +6,21 @@ canvas.height = window.innerHeight * 0.7;
 let distanceTraveled = 0;
 let slingPower = 10;
 let tireWeight = 1;
-let slingshotHeight = 100; // Initial slingshot pole height
-let bounceBoost = 5; // Power of bounce boost
-let bounceBoostCount = 0; // Tracks number of bounce boosts available
-let bounceBoostUsed = 0; // Tracks number of boosts used in each roll
+let slingshotHeight = 100;
+let bounceBoost = 5;
+let bounceBoostCount = 0;
+let bounceBoostUsed = 0;
+let maxPullBackDistance = 100; // Initial pull-back distance, will increase with upgrades
+let pullBackLevel = 0; // Tracks number of pull-back distance upgrades
 let isDragging = false;
 let startX, startY, releaseVelocityX, releaseVelocityY;
 let cameraX = 0;
 let backgroundOffset = 0;
 let tireAngle = 0;
 let money = 0;
-
-const maxPullBackDistance = 300;
 const bounceFactor = 0.6;
-let poleHeightLevel = 0; // Tracks number of pole height upgrades
+let poleHeightLevel = 0;
 
-// Slingshot and tire positioning
 const slingshotOffsetX = canvas.width * 0.6;
 const slingshotCenter = { x: slingshotOffsetX, y: canvas.height - 50 };
 const tire = {
@@ -36,27 +35,29 @@ const tire = {
     released: false,
 };
 
-// Draw function with parallax background, extended ground line, and slingshot visuals
+// Draw function with dynamic background
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     cameraX = Math.max(0, tire.x - slingshotOffsetX);
 
     // Draw Sky Background (Static)
     ctx.fillStyle = "#87CEEB";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw Hills for Background Parallax (Distant Layer)
-    drawHills(-cameraX * 0.3);
+    // Transition Background based on distance
+    if (distanceTraveled < 500) {
+        drawHills(-cameraX * 0.3);
+    } else {
+        drawSlope(-cameraX * 0.5);
+    }
 
-    // Draw Trees for Foreground Parallax (Closer Layer)
     drawTrees(-cameraX * 0.6);
 
     // Draw Ground Line
     ctx.fillStyle = "#8B4513";
     ctx.fillRect(-cameraX, canvas.height - 30, canvas.width * 2, 30);
 
-    // Draw Slingshot Arms, using dynamic slingshotHeight
+    // Draw Slingshot Arms
     ctx.beginPath();
     ctx.moveTo(slingshotCenter.x - 20 - cameraX, slingshotCenter.y);
     ctx.lineTo(slingshotCenter.x - 20 - cameraX, slingshotCenter.y - slingshotHeight);
@@ -102,6 +103,20 @@ function drawHills(offset) {
     ctx.fill();
 }
 
+// Function to draw a downward slope after a certain distance
+function drawSlope(offset) {
+    ctx.fillStyle = "#8B4513";
+    ctx.beginPath();
+    ctx.moveTo(offset, canvas.height - 30);
+    for (let i = 0; i < canvas.width + 100; i += 100) {
+        let slopeDepth = i * 0.1; // Slope gets steeper
+        ctx.lineTo(offset + i, canvas.height - 30 - slopeDepth);
+    }
+    ctx.lineTo(canvas.width, canvas.height);
+    ctx.lineTo(0, canvas.height);
+    ctx.fill();
+}
+
 // Function to draw foreground trees
 function drawTrees(offset) {
     ctx.fillStyle = "#228B22";
@@ -139,7 +154,7 @@ function update() {
             tire.rolling = false;
             tire.stopped = true;
             tire.released = false;
-            bounceBoostUsed = 0; // Reset boost usage
+            bounceBoostUsed = 0;
             money += distanceTraveled;
             document.getElementById("money").innerText = money;
             showUpgradeMenu();
@@ -250,6 +265,16 @@ function upgradeBounceBoost() {
         money -= 10;
         bounceBoostCount++;
         document.getElementById("boostLevel").innerText = bounceBoostCount;
+        document.getElementById("money").innerText = money;
+    }
+}
+
+function upgradePullBack() {
+    if (money >= 10) {
+        money -= 10;
+        maxPullBackDistance += 10;
+        pullBackLevel++;
+        document.getElementById("pullBackLevel").innerText = pullBackLevel;
         document.getElementById("money").innerText = money;
     }
 }
