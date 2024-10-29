@@ -11,6 +11,7 @@ let startX, startY, releaseVelocityX, releaseVelocityY;
 let cameraX = 0;
 let backgroundOffset = 0;
 let tireAngle = 0;
+let money = 0;
 
 // Adjusted slingshot position to the right for better pull-back
 const slingshotOffsetX = 200; // Further from left side
@@ -23,6 +24,7 @@ const tire = {
     vy: 0,
     inAir: false,
     rolling: false,
+    stopped: true, // Initial state is stopped for upgrades
 };
 
 // Draw Function with Parallax Background
@@ -35,12 +37,6 @@ function draw() {
     // Draw Sky Background (Static)
     ctx.fillStyle = "#87CEEB"; // Sky color
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Draw Distant Hills (Slow-moving layer)
-    drawHills(-cameraX * 0.3);
-
-    // Draw Trees in Foreground (Faster-moving layer)
-    drawTrees(-cameraX * 0.6);
 
     // Draw Ground
     ctx.fillStyle = "#8B4513"; // Ground color
@@ -78,33 +74,6 @@ function draw() {
     ctx.restore();
 }
 
-// Function to draw distant hills
-function drawHills(offset) {
-    ctx.fillStyle = "#556B2F"; // Dark green color for distant hills
-    ctx.beginPath();
-    ctx.moveTo(offset, canvas.height - 50);
-    for (let i = 0; i < canvas.width + 100; i += 100) {
-        let hillHeight = 30 + Math.sin(i * 0.01) * 20; // Variation in height
-        ctx.lineTo(offset + i, canvas.height - 50 - hillHeight);
-    }
-    ctx.lineTo(canvas.width, canvas.height);
-    ctx.lineTo(0, canvas.height);
-    ctx.fill();
-}
-
-// Function to draw foreground trees
-function drawTrees(offset) {
-    ctx.fillStyle = "#228B22"; // Green color for trees
-    for (let i = 0; i < canvas.width + 100; i += 150) {
-        ctx.beginPath();
-        ctx.moveTo(offset + i, canvas.height - 30);
-        ctx.lineTo(offset + i + 20, canvas.height - 80);
-        ctx.lineTo(offset + i - 20, canvas.height - 80);
-        ctx.closePath();
-        ctx.fill();
-    }
-}
-
 // Update Function
 function update() {
     if (tire.inAir) {
@@ -112,33 +81,27 @@ function update() {
         tire.vx *= 0.99; // Air friction
         tire.x += tire.vx;
         tire.y += tire.vy;
+        tireAngle += tire.vx / tire.radius; // Rolling effect
 
-        // Update tire rotation for rolling effect
-        tireAngle += tire.vx / tire.radius;
-
-        // Tire lands on ground
-        if (tire.y >= canvas.height - 50) {
+        if (tire.y >= canvas.height - 50) { // Land on ground
             tire.inAir = false;
             tire.rolling = true;
             tire.y = canvas.height - 50;
         }
     } else if (tire.rolling) {
-        // Tire rolling on ground
         tire.vx *= 0.98; // Ground friction
         tire.x += tire.vx;
-        tireAngle += tire.vx / tire.radius; // Simulate rolling rotation
+        tireAngle += tire.vx / tire.radius;
 
-        // Background scroll for rolling effect
-        backgroundOffset -= tire.vx * 0.5;
-
-        // Stop rolling when too slow
-        if (Math.abs(tire.vx) < 0.1) {
+        if (Math.abs(tire.vx) < 0.1) { // Stop rolling
             tire.rolling = false;
-            tire.vx = 0;
+            tire.stopped = true;
+            money += distanceTraveled;
+            document.getElementById("money").innerText = money;
+            showUpgradeMenu();
         }
     }
 
-    // Update distance counter
     distanceTraveled = Math.round(tire.x - slingshotCenter.x);
     document.getElementById("distance").innerText = distanceTraveled + " meters";
 
@@ -146,16 +109,9 @@ function update() {
     requestAnimationFrame(update);
 }
 
-// Mouse and Touch Events
-canvas.addEventListener("mousedown", startDrag);
-canvas.addEventListener("touchstart", startDrag);
-canvas.addEventListener("mousemove", drag);
-canvas.addEventListener("touchmove", drag);
-canvas.addEventListener("mouseup", release);
-canvas.addEventListener("touchend", release);
-
+// Prevent dragging backward
 function startDrag(event) {
-    if (!tire.inAir && !tire.rolling) {
+    if (!tire.inAir && !tire.rolling && tire.stopped) {
         isDragging = true;
         startX = event.touches ? event.touches[0].clientX : event.clientX;
         startY = event.touches ? event.touches[0].clientY : event.clientY;
@@ -166,7 +122,7 @@ function drag(event) {
     if (isDragging) {
         let currentX = event.touches ? event.touches[0].clientX : event.clientX;
         let currentY = event.touches ? event.touches[0].clientY : event.clientY;
-        tire.x = currentX + cameraX; // Adjust drag position by camera offset
+        tire.x = Math.max(currentX + cameraX, slingshotCenter.x); // Restrict to right side
         tire.y = currentY;
     }
 }
@@ -174,25 +130,49 @@ function drag(event) {
 function release() {
     if (isDragging) {
         isDragging = false;
+        tire.stopped = false;
         releaseVelocityX = (slingshotCenter.x - tire.x) * slingPower / 50;
         releaseVelocityY = (slingshotCenter.y - tire.y) * slingPower / 50;
         tire.vx = releaseVelocityX;
         tire.vy = releaseVelocityY;
         tire.inAir = true;
 
-        // Reset tire back to slingshot origin visually
         tire.x = slingshotCenter.x;
         tire.y = slingshotCenter.y;
     }
 }
 
 // Upgrade Functions
-document.getElementById("upgradeSling").addEventListener("click", () => {
-    slingPower += 5;
-});
+function showUpgradeMenu() {
+    document.getElementById("upgradeMenu").classList.remove("hidden");
+}
 
-document.getElementById("upgradeTire").addEventListener("click", () => {
-    tireWeight -= 0.1; // Lower weight makes it fly further
-});
+function closeUpgradeMenu() {
+    document.getElementById("upgradeMenu").classList.add("hidden");
+    tire.x = slingshotCenter.x;
+    tire.y = slingshotCenter.y;
+}
+
+function upgradeSling() {
+    if (money >= 10) {
+        money -= 10;
+        slingPower += 5;
+        document.getElementById("money").innerText = money;
+    }
+}
+
+function upgradeTire() {
+    if (money >= 10) {
+        money -= 10;
+        tireWeight -= 0.1; // Lighten the tire for more distance
+        document.getElementById("money").innerText = money;
+    }
+}
 
 update();
+canvas.addEventListener("mousedown", startDrag);
+canvas.addEventListener("mousemove", drag);
+canvas.addEventListener("mouseup", release);
+canvas.addEventListener("touchstart", startDrag);
+canvas.addEventListener("touchmove", drag);
+canvas.addEventListener("touchend", release);

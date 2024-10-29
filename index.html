@@ -10,8 +10,14 @@
     <canvas id="gameCanvas"></canvas>
     <div id="ui">
         <h2>Distance: <span id="distance">0</span> meters</h2>
-        <button id="upgradeSling">Upgrade Sling</button>
-        <button id="upgradeTire">Upgrade Tire</button>
+        <button id="openUpgradeMenu" onclick="showUpgradeMenu()">Upgrade</button>
+    </div>
+    <div id="upgradeMenu" class="hidden">
+        <h3>Upgrade Menu</h3>
+        <p>Money: <span id="money">0</span> meters</p>
+        <button onclick="upgradeSling()">Upgrade Sling (10 meters)</button>
+        <button onclick="upgradeTire()">Upgrade Tire (10 meters)</button>
+        <button onclick="closeUpgradeMenu()">Done</button>
     </div>
     <script src="game.js"></script>
 </body>
