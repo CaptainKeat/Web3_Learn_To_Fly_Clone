@@ -8,10 +8,12 @@ let slingPower = 10;
 let tireWeight = 1;
 let isDragging = false;
 let startX, startY, releaseVelocityX, releaseVelocityY;
-let cameraX = 0; // New camera offset variable
+let cameraX = 0;
+let backgroundOffset = 0;
+let tireAngle = 0;
 
-// Slingshot Position, adjusted to be relative to camera
-const slingshotOffsetX = 150; // Distance from left side of screen
+// Adjusted slingshot position to the right for better pull-back
+const slingshotOffsetX = 200; // Further from left side
 const slingshotCenter = { x: slingshotOffsetX, y: canvas.height - 50 };
 const tire = {
     x: slingshotCenter.x,
@@ -30,11 +32,13 @@ function draw() {
     // Calculate camera offset
     cameraX = Math.max(0, tire.x - slingshotOffsetX);
 
-    // Draw Ground
+    // Draw Background (Simple Parallax)
+    ctx.fillStyle = "#87CEEB"; // Sky color
+    ctx.fillRect(0, 0, canvas.width, canvas.height - 30);
     ctx.fillStyle = "#8B4513"; // Ground color
-    ctx.fillRect(-cameraX, canvas.height - 30, canvas.width * 2, 30);
+    ctx.fillRect(-cameraX + backgroundOffset, canvas.height - 30, canvas.width * 2, 30);
 
-    // Draw Slingshot Arms relative to camera
+    // Draw Slingshot Arms
     ctx.beginPath();
     ctx.moveTo(slingshotCenter.x - 20 - cameraX, slingshotCenter.y);
     ctx.lineTo(slingshotCenter.x - 20 - cameraX, slingshotCenter.y - 100);
@@ -55,11 +59,15 @@ function draw() {
         ctx.stroke();
     }
 
-    // Draw Tire relative to camera
+    // Draw Tire with Rotation Effect
+    ctx.save();
+    ctx.translate(tire.x - cameraX, tire.y);
+    ctx.rotate(tireAngle);
     ctx.beginPath();
-    ctx.arc(tire.x - cameraX, tire.y, tire.radius, 0, Math.PI * 2);
+    ctx.arc(0, 0, tire.radius, 0, Math.PI * 2);
     ctx.fillStyle = "black";
     ctx.fill();
+    ctx.restore();
 }
 
 // Update Function
@@ -69,6 +77,9 @@ function update() {
         tire.vx *= 0.99; // Air friction
         tire.x += tire.vx;
         tire.y += tire.vy;
+
+        // Update tire rotation for rolling effect
+        tireAngle += tire.vx / tire.radius;
 
         // Tire lands on ground
         if (tire.y >= canvas.height - 50) {
@@ -80,8 +91,15 @@ function update() {
         // Tire rolling on ground
         tire.vx *= 0.98; // Ground friction
         tire.x += tire.vx;
+        tireAngle += tire.vx / tire.radius; // Simulate rolling rotation
+
+        // Background scroll for rolling effect
+        backgroundOffset -= tire.vx * 0.5;
+
+        // Stop rolling when too slow
         if (Math.abs(tire.vx) < 0.1) {
-            tire.rolling = false; // Stop if too slow
+            tire.rolling = false;
+            tire.vx = 0;
         }
     }
 
