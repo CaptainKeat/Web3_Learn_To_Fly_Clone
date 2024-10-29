@@ -15,7 +15,6 @@ let pullBackLevel = 0; // Tracks number of pull-back distance upgrades
 let isDragging = false;
 let startX, startY, releaseVelocityX, releaseVelocityY;
 let cameraX = 0;
-let backgroundOffset = 0;
 let tireAngle = 0;
 let money = 0;
 const bounceFactor = 0.6;
@@ -35,7 +34,7 @@ const tire = {
     released: false,
 };
 
-// Draw function with dynamic background
+// Draw function with consistent ground and dynamic background
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     cameraX = Math.max(0, tire.x - slingshotOffsetX);
@@ -46,14 +45,18 @@ function draw() {
 
     // Transition Background based on distance
     if (distanceTraveled < 500) {
-        drawHills(-cameraX * 0.3);
+        drawHills(-cameraX * 0.3); // Hills in the background for the first 500 meters
+    } else if (distanceTraveled < 1000) {
+        drawForest(-cameraX * 0.3); // Forest after 500 meters
+    } else if (distanceTraveled < 1500) {
+        drawDesert(-cameraX * 0.3); // Desert after 1000 meters
     } else {
-        drawSlope(-cameraX * 0.5);
+        drawPlains(-cameraX * 0.3); // Open plains after 1500 meters
     }
 
     drawTrees(-cameraX * 0.6);
 
-    // Draw Ground Line
+    // Draw Ground Line (consistent flat brown area)
     ctx.fillStyle = "#8B4513";
     ctx.fillRect(-cameraX, canvas.height - 30, canvas.width * 2, 30);
 
@@ -89,7 +92,7 @@ function draw() {
     ctx.restore();
 }
 
-// Function to draw distant hills
+// Function to draw hills
 function drawHills(offset) {
     ctx.fillStyle = "#556B2F";
     ctx.beginPath();
@@ -103,18 +106,39 @@ function drawHills(offset) {
     ctx.fill();
 }
 
-// Function to draw a downward slope after a certain distance
-function drawSlope(offset) {
-    ctx.fillStyle = "#8B4513";
+// Function to draw forest background
+function drawForest(offset) {
+    ctx.fillStyle = "#228B22"; // Darker green for forest trees
+    for (let i = 0; i < canvas.width + 100; i += 150) {
+        ctx.beginPath();
+        ctx.moveTo(offset + i, canvas.height - 60);
+        ctx.lineTo(offset + i + 20, canvas.height - 120);
+        ctx.lineTo(offset + i - 20, canvas.height - 120);
+        ctx.closePath();
+        ctx.fill();
+    }
+}
+
+// Function to draw desert background
+function drawDesert(offset) {
+    ctx.fillStyle = "#D2B48C"; // Sandy color for desert
+    ctx.fillRect(offset, canvas.height - 80, canvas.width, 50);
+
+    ctx.fillStyle = "#C2A385"; // Desert dunes color
     ctx.beginPath();
-    ctx.moveTo(offset, canvas.height - 30);
     for (let i = 0; i < canvas.width + 100; i += 100) {
-        let slopeDepth = i * 0.1; // Slope gets steeper
-        ctx.lineTo(offset + i, canvas.height - 30 - slopeDepth);
+        let duneHeight = 10 + Math.cos(i * 0.03) * 10;
+        ctx.lineTo(offset + i, canvas.height - 60 - duneHeight);
     }
     ctx.lineTo(canvas.width, canvas.height);
     ctx.lineTo(0, canvas.height);
     ctx.fill();
+}
+
+// Function to draw plains background
+function drawPlains(offset) {
+    ctx.fillStyle = "#7BB661"; // Light green color for plains
+    ctx.fillRect(offset, canvas.height - 80, canvas.width, 50);
 }
 
 // Function to draw foreground trees
