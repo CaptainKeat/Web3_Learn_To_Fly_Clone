@@ -13,8 +13,8 @@ let backgroundOffset = 0;
 let tireAngle = 0;
 let money = 0;
 
-// Adjusted slingshot position to the right for better pull-back
-const slingshotOffsetX = 200; // Further from left side
+// Adjusted slingshot position further to the right for more pull-back space
+const slingshotOffsetX = canvas.width * 0.6; // New starting position for slingshot
 const slingshotCenter = { x: slingshotOffsetX, y: canvas.height - 50 };
 const tire = {
     x: slingshotCenter.x,
@@ -109,7 +109,7 @@ function update() {
     requestAnimationFrame(update);
 }
 
-// Prevent dragging backward
+// Allow dragging to the left but not forward of the slingshot
 function startDrag(event) {
     if (!tire.inAir && !tire.rolling && tire.stopped) {
         isDragging = true;
@@ -122,7 +122,7 @@ function drag(event) {
     if (isDragging) {
         let currentX = event.touches ? event.touches[0].clientX : event.clientX;
         let currentY = event.touches ? event.touches[0].clientY : event.clientY;
-        tire.x = Math.max(currentX + cameraX, slingshotCenter.x); // Restrict to right side
+        tire.x = Math.min(currentX + cameraX, slingshotCenter.x); // Restrict forward movement
         tire.y = currentY;
     }
 }
