@@ -44,7 +44,7 @@ function create() {
     hillRamp.body.setOffset(100, 30);  // Adjust offset to match the top left corner of the hill
 
     // Tire setup - Start at the top left of the hill, positioned higher
-    tire = this.physics.add.sprite(100, 300, 'tire');  // Higher and further left
+    tire = this.physics.add.sprite(100, 250, 'tire');  // Higher and further left
     tire.setBounce(0.2);
     tire.setCollideWorldBounds(true);
     this.physics.add.collider(tire, ground);
