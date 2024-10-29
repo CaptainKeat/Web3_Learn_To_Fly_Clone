@@ -14,7 +14,7 @@ let tireAngle = 0;
 let money = 0;
 
 // Set pull-back limit and bounce properties
-const maxPullBackDistance = 100; // Limit pull-back distance
+const maxPullBackDistance = 400; // Limit pull-back distance
 const bounceFactor = 0.6; // Energy lost on each bounce
 
 // Adjust slingshot position to the right for better gameplay flow
