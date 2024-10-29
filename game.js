@@ -14,7 +14,7 @@ let tireAngle = 0;
 let money = 0;
 
 // Adjusted slingshot position further to the right for more pull-back space
-const slingshotOffsetX = canvas.width * 0.6; // New starting position for slingshot
+const slingshotOffsetX = canvas.width * 0.6;
 const slingshotCenter = { x: slingshotOffsetX, y: canvas.height - 50 };
 const tire = {
     x: slingshotCenter.x,
@@ -24,10 +24,11 @@ const tire = {
     vy: 0,
     inAir: false,
     rolling: false,
-    stopped: true, // Initial state is stopped for upgrades
+    stopped: true,
+    released: false, // Track if the tire is released to manage rope behavior
 };
 
-// Draw Function with Parallax Background
+// Draw Function with Parallax Background and Extended Ground Line
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -38,9 +39,9 @@ function draw() {
     ctx.fillStyle = "#87CEEB"; // Sky color
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw Ground
+    // Draw Ground Line
     ctx.fillStyle = "#8B4513"; // Ground color
-    ctx.fillRect(-cameraX + backgroundOffset, canvas.height - 30, canvas.width * 2, 30);
+    ctx.fillRect(-cameraX, canvas.height - 30, canvas.width * 2, 30); // Infinite ground effect
 
     // Draw Slingshot Arms
     ctx.beginPath();
@@ -52,8 +53,8 @@ function draw() {
     ctx.lineWidth = 8;
     ctx.stroke();
 
-    // Draw Rubber Band
-    if (isDragging || tire.inAir) {
+    // Draw Rubber Band if Tire is Held (not released)
+    if (isDragging || (!tire.released && tire.inAir)) {
         ctx.beginPath();
         ctx.moveTo(slingshotCenter.x - 20 - cameraX, slingshotCenter.y - 100);
         ctx.lineTo(tire.x - cameraX, tire.y);
@@ -74,16 +75,17 @@ function draw() {
     ctx.restore();
 }
 
-// Update Function
+// Update Function with Natural Arc Physics
 function update() {
     if (tire.inAir) {
         tire.vy += 0.5 * tireWeight; // Gravity effect
         tire.vx *= 0.99; // Air friction
         tire.x += tire.vx;
         tire.y += tire.vy;
-        tireAngle += tire.vx / tire.radius; // Rolling effect
+        tireAngle += tire.vx / tire.radius; // Rolling effect in air
 
-        if (tire.y >= canvas.height - 50) { // Land on ground
+        // Check if tire lands on ground
+        if (tire.y >= canvas.height - 50) {
             tire.inAir = false;
             tire.rolling = true;
             tire.y = canvas.height - 50;
@@ -91,17 +93,19 @@ function update() {
     } else if (tire.rolling) {
         tire.vx *= 0.98; // Ground friction
         tire.x += tire.vx;
-        tireAngle += tire.vx / tire.radius;
+        tireAngle += tire.vx / tire.radius; // Rolling effect on ground
 
         if (Math.abs(tire.vx) < 0.1) { // Stop rolling
             tire.rolling = false;
             tire.stopped = true;
+            tire.released = false; // Reset release state for next launch
             money += distanceTraveled;
             document.getElementById("money").innerText = money;
             showUpgradeMenu();
         }
     }
 
+    // Update distance counter
     distanceTraveled = Math.round(tire.x - slingshotCenter.x);
     document.getElementById("distance").innerText = distanceTraveled + " meters";
 
@@ -109,7 +113,7 @@ function update() {
     requestAnimationFrame(update);
 }
 
-// Allow dragging to the left but not forward of the slingshot
+// Allow dragging to the left but restrict forward movement beyond slingshot center
 function startDrag(event) {
     if (!tire.inAir && !tire.rolling && tire.stopped) {
         isDragging = true;
@@ -131,6 +135,7 @@ function release() {
     if (isDragging) {
         isDragging = false;
         tire.stopped = false;
+        tire.released = true; // Mark tire as released to detach ropes
         releaseVelocityX = (slingshotCenter.x - tire.x) * slingPower / 50;
         releaseVelocityY = (slingshotCenter.y - tire.y) * slingPower / 50;
         tire.vx = releaseVelocityX;
